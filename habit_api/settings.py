@@ -25,6 +25,10 @@ SECRET_KEY = 'django-insecure-^3ua2kfobul(fce64rjk-e)b@s*3sm(0!0)d&q*ou8*f-pv+v%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://8000-lienebriede-habitapi-sf6o0y7v3iq.ws.codeinstitute-ide.net'
+]
+
 ALLOWED_HOSTS = [
     '8000-lienebriede-habitapi-sf6o0y7v3iq.ws.codeinstitute-ide.net',
 ]
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 
     'profiles',
 ]
