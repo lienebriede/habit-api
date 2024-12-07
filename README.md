@@ -60,3 +60,10 @@ It is not possible to create a habit stack with all habit fields (both predefine
 
 See [testing.md](testing.md) for all the tests conducted.
 
+# Issues
+
+1. 
+During testing, users were able to access and modify each other's profiles and habit stacks, violating the website's privacy principles. The error messages were unclear, revealing the need for stricter permissions to ensure data security.
+
+*Fix:*
+Permissions were updated to ensure only authenticated users can access their own data. A custom permission was implemented to enforce ownership, allowing users to view, modify, or delete only their own habit stacks. The permission class `IsOwnerOrReadOnly`` was changed to IsAuthenticatedAndOwnerOrReadOnly` to ensure that users could only interact with their own data.
