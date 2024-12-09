@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import HabitStacking, PredefinedHabit
+from .models import HabitStacking, PredefinedHabit, HabitStackingLog
 
 # Serializer for HabitStacking model
 class HabitStackingSerializer(serializers.ModelSerializer):
@@ -80,3 +80,12 @@ class HabitStackingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid goal value.")
 
         return data
+
+# Serializer for HabitStackingLog model
+class HabitStackingLogSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    habit_stack = HabitStackingSerializer()
+
+    class Meta:
+        model = HabitStackingLog
+        fields = ['id', 'habit_stack', 'user', 'date', 'completed']

@@ -40,6 +40,17 @@ The `HabitStacking` model allows users to create custom habit stacks by choosing
 
 It is not possible to create a habit stack with all habit fields (both predefined and custom) left empty. At least one habit field must be provided for each position in the stack (either predefined or custom).
 
+### HabitStackingLog Model
+
+The `HabitStackingLog` model tracks the progress of a user's habit stack on a daily basis. It records whether a habit has been completed for a specific user on a given date, allowing for progress tracking over time.
+
+*Fields:*
+
+- `habit_stack`: A ForeignKey linking to the `HabitStacking` model, which represents the user's habit stack.
+- `user`: A ForeignKey linking to the built-in `User` model, indicating which user the log belongs to.
+- `date`: A DateField that records the date for the log entry, which corresponds to the specific day the habit stacking progress is being tracked.
+- `completed`: A BooleanField that indicates whether the user has completed the habit stack for the given day. The default value is False.
+
 # API Endpoints
 
 | URL | Notes | HTTP Method | CRUD Operations |
@@ -55,6 +66,7 @@ It is not possible to create a habit stack with all habit fields (both predefine
 | `/habit-stacking/<int:pk>/` | Retrieve a specific habit stack by ID. | GET | Read |
 || Update a habit stack for the authenticated user. | PUT | Update |
 || Delete a habit stack for the authenticated user. | DELETE | Delete |
+| `/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
 
 # Testing
 

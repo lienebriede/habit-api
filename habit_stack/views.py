@@ -1,7 +1,9 @@
 from rest_framework import generics
-from .models import HabitStacking
-from .serializers import HabitStackingSerializer
+from .models import HabitStacking, HabitStackingLog
+from .serializers import HabitStackingSerializer, HabitStackingLogSerializer
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
+from django.utils import timezone
+from datetime import timedelta
 
 # HabitStacking list and create view
 class HabitStackingListView(generics.ListCreateAPIView):
@@ -13,8 +15,19 @@ class HabitStackingListView(generics.ListCreateAPIView):
 
     # Ensures it's tied to the logged-in user
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        habit_stack = serializer.save(user=self.request.user)
 
+        # Automatically create logs for the next 7 days if 'DAILY'
+        if habit_stack.goal == 'DAILY':
+            for i in range(7):
+                log_date = timezone.now().date() + timedelta(days=i)
+                HabitStackingLog.objects.create(
+                    habit_stack=habit_stack,
+                    user=self.request.user,
+                    date=log_date,
+                    completed=False
+                )
+  
 # HabitStacking retrieve, update, and delete view
 class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = HabitStackingSerializer
@@ -24,5 +37,14 @@ class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
         return HabitStacking.objects.all()
 
     def perform_update(self, serializer):
-        # Ensures partial update works correctly
         serializer.save(user=self.request.user)
+
+# HabitStackingLog list view
+class HabitStackingLogListView(generics.ListAPIView):
+    serializer_class = HabitStackingLogSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return HabitStackingLog.objects.filter(user=self.request.user).order_by('date')
+
+    

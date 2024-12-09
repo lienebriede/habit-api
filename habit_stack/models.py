@@ -32,3 +32,16 @@ class HabitStacking(models.Model):
         habit1 = self.predefined_habit1.name if self.predefined_habit1 else self.custom_habit1
         habit2 = self.predefined_habit2.name if self.predefined_habit2 else self.custom_habit2
         return f'{self.user.username} - {habit1} & {habit2}'
+
+
+class HabitStackingLog(models.Model):
+    habit_stack = models.ForeignKey(HabitStacking, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField()
+    completed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('habit_stack', 'user', 'date')
+
+    def __str__(self):
+        return f'{self.habit_stack} - {self.date} - Completed: {self.completed}'
