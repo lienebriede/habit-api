@@ -1,7 +1,10 @@
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
-from .models import HabitStacking, PredefinedHabit
+from .models import HabitStacking, PredefinedHabit, HabitStackingLog
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
+
 
 class HabitStackingListViewTests(APITestCase):
     def setUp(self):
@@ -148,4 +151,67 @@ class HabitStackingDetailViewTests(APITestCase):
         response = self.client.delete(f'/habit-stacking/{self.habit_stack1.id}/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+class HabitStackingLogListViewTests(APITestCase):
+
+    def setUp(self):
+        # Create users
+        self.user1 = User.objects.create_user(username='Maija', password='001')
+        self.user2 = User.objects.create_user(username='Janis', password='002')
+
+        # Create predefined habits
+        self.habit1 = PredefinedHabit.objects.create(name='Habit 1')
+        self.habit2 = PredefinedHabit.objects.create(name='Habit 2')
+        self.habit3 = PredefinedHabit.objects.create(name='Habit 3')
+        self.habit4 = PredefinedHabit.objects.create(name='Habit 4')
+
+        # Create habit stacks for each user
+        self.habit_stack1 = HabitStacking.objects.create(
+            user=self.user1,
+            predefined_habit1=self.habit1,
+            predefined_habit2=self.habit2,
+            goal='DAILY'
+        )
+        self.habit_stack2 = HabitStacking.objects.create(
+            user=self.user2,
+            predefined_habit1=self.habit1,
+            custom_habit2='Custom Habit 2',
+            goal='NO_GOAL'
+        )
+    
+        # Create logs for habit_stack1 for 7 days
+        self._create_auto_logs(self.habit_stack1)
+
+    def _create_auto_logs(self, habit_stack):
+        # Automatically create 7 habit stacking logs for the next 7 days
+        for i in range(7):
+            HabitStackingLog.objects.create(
+                habit_stack=habit_stack,
+                user=habit_stack.user,
+                date=(timezone.now().date() + timedelta(days=i)),
+                completed=False
+            )
+    def test_habit_stacking_log_list_authenticated(self):
+        # Test if authenticated user can view their own habit stacking logs
+        self.client.login(username='Maija', password='001')
+        response = self.client.get('/habit-stacking-logs/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 7)
+
+    def test_habit_stacking_log_list_unauthenticated(self):
+        # Test if unauthenticated user gets 403 Forbidden
+        response = self.client.get('/habit-stacking-logs/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_habit_stacking_log_auto_creation_7_days(self):
+        # Test that 7 habit stacking logs are created
+        self.client.login(username='Maija', password='001')
+        response = self.client.get('/habit-stacking-logs/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 7)
+        
+        # Test the logs are created for the next 7 days, 'completed' is False
+        for i, log in enumerate(response.data):
+            expected_date = (timezone.now().date() + timedelta(days=i)).isoformat()
+            self.assertEqual(log["date"], expected_date)
+            self.assertFalse(log["completed"])
 
