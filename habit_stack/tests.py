@@ -215,3 +215,51 @@ class HabitStackingLogListViewTests(APITestCase):
             self.assertEqual(log["date"], expected_date)
             self.assertFalse(log["completed"])
 
+class HabitStackingLogEditViewTests(APITestCase):
+
+    def setUp(self):
+        # Create user
+        self.user1 = User.objects.create_user(username='Maija', password='001')
+
+        # Create predefined habits and habit stack
+        self.habit1 = PredefinedHabit.objects.create(name='Habit 1')
+        self.habit2 = PredefinedHabit.objects.create(name='Habit 2')
+
+        self.habit_stack1 = HabitStacking.objects.create(
+            user=self.user1,
+            predefined_habit1=self.habit1,
+            predefined_habit2=self.habit2,
+            goal='DAILY'
+        )
+
+        # Create logs for habit_stack1 for 7 days
+        self._create_auto_logs(self.habit_stack1)
+
+    def _create_auto_logs(self, habit_stack):
+        for i in range(7):
+            HabitStackingLog.objects.create(
+                habit_stack=habit_stack,
+                user=habit_stack.user,
+                date=(timezone.now().date() + timedelta(days=i)),
+                completed=False
+            )
+
+    def test_habit_stacking_log_update_complete(self):
+        self.client.login(username='Maija', password='001')
+
+        # Test if can update the completion
+        log = HabitStackingLog.objects.filter(user=self.user1).first()
+        response = self.client.patch(f'/habit-stacking-logs/{log.id}/', {'completed': True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(HabitStackingLog.objects.get(id=log.id).completed)
+
+    def test_habit_stacking_log_update_undo(self):
+        self.client.login(username='Maija', password='001')
+
+        # Test if can undo completion
+        log = HabitStackingLog.objects.filter(user=self.user1).first()
+        log.completed = True
+        log.save()
+        response = self.client.patch(f'/habit-stacking-logs/{log.id}/', {'completed': False})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(HabitStackingLog.objects.get(id=log.id).completed)

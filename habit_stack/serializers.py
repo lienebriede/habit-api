@@ -81,7 +81,7 @@ class HabitStackingSerializer(serializers.ModelSerializer):
 
         return data
 
-# Serializer for HabitStackingLog model
+# Serializer for HabitStackingLog
 class HabitStackingLogSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     habit_stack = HabitStackingSerializer()
@@ -89,3 +89,9 @@ class HabitStackingLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = HabitStackingLog
         fields = ['id', 'habit_stack', 'user', 'date', 'completed']
+
+# Serializer for HabitStackingLogEdit
+class HabitStackingLogEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HabitStackingLog
+        fields = ['completed']

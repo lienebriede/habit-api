@@ -1,6 +1,6 @@
 from rest_framework import generics
 from .models import HabitStacking, HabitStackingLog
-from .serializers import HabitStackingSerializer, HabitStackingLogSerializer
+from .serializers import HabitStackingSerializer, HabitStackingLogSerializer, HabitStackingLogEditSerializer
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
@@ -47,4 +47,10 @@ class HabitStackingLogListView(generics.ListAPIView):
     def get_queryset(self):
         return HabitStackingLog.objects.filter(user=self.request.user).order_by('date')
 
-    
+# HabitStackingLog update view
+class HabitStackingLogEditView(generics.UpdateAPIView):
+    serializer_class = HabitStackingLogEditSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return HabitStackingLog.objects.filter(user=self.request.user)

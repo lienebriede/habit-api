@@ -67,6 +67,7 @@ The `HabitStackingLog` model tracks the progress of a user's habit stack on a da
 || Update a habit stack for the authenticated user. | PUT | Update |
 || Delete a habit stack for the authenticated user. | DELETE | Delete |
 | `/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
+| `habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
 
 # Testing
 

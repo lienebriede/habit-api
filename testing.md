@@ -21,6 +21,9 @@
 |PUT `/habit-stacking/{id}/`| The user can update details of their existing habit stacks. | Return 200 OK with updated habit stack details. |<img src="documentation/update_habitstack.png">|
 |DELETE `/habit-stacking/{id}/`| The user can delete their own habit stacks. | Return 204 No Content on successful deletion. |<img src="documentation/204_no_content.png">|
 |GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|PASS|
+| PATCH `habit-stacking-logs/<int:pk>/`|Update the completed status of a habit stacking log (mark as complete or undo).|Return 200 OK with the updated log reflecting the completed status.|<img src="documentation/update_complete.png"><img src="documentation/Update_complete_undo.png">|
+
+
 # Automated Tests
 
 ### HabitStacking List View
@@ -55,3 +58,11 @@
 |`test_habit_stacking_log_auto_creation_7_days`|Should automatically create 7 habit stacking logs for the authenticated user, one for each of the next 7 days, when a habit stack is created with a DAILY goal.|PASS
 
 <img src="documentation/habit_stack_automated_test.png">
+
+### HabitStackingLog Edit View
+| Test | Expected Result | Outcome |
+| ---- | --------------- | ------- |
+| `test_habit_stacking_log_update_complete`|Should update the log's completed status to True.|PASS|
+|`test_habit_stacking_log_update_undo`|Should update the log's completed status back to False.|PASS|
+
+<img src="documentation/habit_stack_tests_pass.png">
