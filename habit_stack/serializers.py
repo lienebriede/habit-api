@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import HabitStacking, PredefinedHabit, HabitStackingLog, StreakAndMilestoneTracker
+from datetime import date
 
 class HabitStackingSerializer(serializers.ModelSerializer):
     """
@@ -120,4 +121,12 @@ class HabitStackingLogSerializer(serializers.ModelSerializer):
 class HabitStackingLogEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = HabitStackingLog
-        fields = ['completed']
+        fields = ['completed', 'date']
+
+    def validate(self, data):
+        """
+        Ensure that the log date is not in the future.
+        """
+        if data.get('date') and data['date'] > date.today():
+            raise serializers.ValidationError("You cannot log habits for future dates.")
+        return data

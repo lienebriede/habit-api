@@ -100,4 +100,10 @@ See [testing.md](testing.md) for all the tests conducted.
 During testing, users were able to access and modify each other's profiles and habit stacks, violating the website's privacy principles. The error messages were unclear, revealing the need for stricter permissions to ensure data security.
 
 *Fix:*
-Permissions were updated to ensure only authenticated users can access their own data. A custom permission was implemented to enforce ownership, allowing users to view, modify, or delete only their own habit stacks. The permission class `IsOwnerOrReadOnly`` was changed to IsAuthenticatedAndOwnerOrReadOnly` to ensure that users could only interact with their own data.
+Permissions were updated to ensure only authenticated users can access their own data. A custom permission was implemented to enforce ownership, allowing users to view, modify, or delete only their own habit stacks. The permission class `IsOwnerOrReadOnly` was changed to `IsAuthenticatedAndOwnerOrReadOnly` to ensure that users could only interact with their own data.
+
+2.
+During testing, users were able to mark habits as completed for future dates, resulting in invalid milestone tracking and streaks being incorrectly calculated. This violated the websites's principle of reflecting real-time progress.
+
+*Fix:*
+Validation logic was added to the `HabitStackingLogSerializer` and the `StreakAndMilestoneTracker` model to restrict habit completion to the current or past dates only. Any attempt to mark a habit as completed on a future date now raises a `ValidationError`. This ensures data integrity and realistic progress tracking.

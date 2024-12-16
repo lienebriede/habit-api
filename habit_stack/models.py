@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class PredefinedHabit(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -56,6 +57,9 @@ class StreakAndMilestoneTracker(models.Model):
     milestone_dates = models.JSONField(default=list)
 
     def update_streak_and_completions(self, completed_today):
+        if self.habit_stack.habitstackinglog_set.filter(date__gt=timezone.now().date()).exists():
+            return None
+        
         milestone_achieved = None
         if completed_today:
             self.current_streak += 1
