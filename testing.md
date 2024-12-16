@@ -22,11 +22,11 @@
 |DELETE `/habit-stacking/{id}/`| The user can delete their own habit stacks. | Return 204 No Content on successful deletion. |<img src="documentation/204_no_content.png">|
 |GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|PASS|
 | PATCH `habit-stacking-logs/<int:pk>/`|Update the completed status of a habit stacking log (mark as complete or undo).|Return 200 OK with the updated log reflecting the completed status.|<img src="documentation/update_complete.png"><img src="documentation/Update_complete_undo.png">|
-
+| PATCH `habit-stacking-logs/<int:pk>/`| Attempt to mark a habit stack complete in future time raises an error.| Returns a 400 Bad Request and a validation message.| <img src="documentation/error_future_date.png">|
 
 # Automated Tests
 
-### HabitStacking List View
+### HabitStackingListViewTests
 
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
@@ -36,7 +36,7 @@
 | `test_create_habit_stack_validation_error` | Should return `400 Bad Request` for invalid habit stack data |PASS|
 | `test_create_habit_stack_unauthenticated` | Should return `403 Forbidden` when trying to create a habit stack without authentication |PASS|
 
-### HabitStacking Detail View
+### HabitStackingDetailViewTests
 
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
@@ -50,7 +50,7 @@
 
 <img src="documentation/habit_stacking_tests_pass.png">
 
-### HabitStackingLog List View
+### HabitStackingLogListViewTests
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
 | `test_habit_stacking_log_list_authenticated`| Should return a list of habit stacking logs for the authenticated user. |PASS|
@@ -59,10 +59,21 @@
 
 <img src="documentation/habit_stack_automated_test.png">
 
-### HabitStackingLog Edit View
+### HabitStackingLogEditViewTests
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
 | `test_habit_stacking_log_update_complete`|Should update the log's completed status to True.|PASS|
 |`test_habit_stacking_log_update_undo`|Should update the log's completed status back to False.|PASS|
 
 <img src="documentation/habit_stack_tests_pass.png">
+
+### StreakAndMilestoneTrackerTests
+| Test | Expected Result | Outcome |
+| ---- | --------------- | ------- |
+| `test_update_streak_and_completions_on_success`|Streak and total completions should increase by 1 upon habit completion.|PASS|
+|`test_streak_reset_on_incompletion`|Streak should reset to 0 when the habit is not completed.|PASS|
+|`test_milestone_achieved`|Milestone message should be generated, and total completions should increase to the next milestone.|PASS|
+|`test_multiple_milestones`|Multiple milestones should be achieved and milestone dates should be recorded.|PASS|
+|`test_no_future_logs_allowed`| Habit completion should not be logged for future dates, and streak/completions should remain unchanged.|PASS|
+
+<img src="documentation/tests_added_streaks.png">

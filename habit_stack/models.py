@@ -81,6 +81,7 @@ class StreakAndMilestoneTracker(models.Model):
             milestone_message = f"Congratulations! You've reached {self.total_completions} completions!"
             self.milestone_dates.append(str(timezone.now().date()))
             self.save()
+            return milestone_message
         return None
 
     def __str__(self):
