@@ -45,3 +45,39 @@ class HabitStackingLog(models.Model):
 
     def __str__(self):
         return f'{self.habit_stack} - {self.date} - Completed: {self.completed}'
+
+
+class StreakAndMilestoneTracker(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    habit_stack = models.ForeignKey(HabitStacking, on_delete=models.CASCADE)
+    current_streak = models.IntegerField(default=0)
+    longest_streak = models.IntegerField(default=0)
+    total_completions = models.IntegerField(default=0)
+    milestone_dates = models.JSONField(default=list)
+
+    def update_streak_and_completions(self, completed_today):
+        milestone_achieved = None
+        if completed_today:
+            self.current_streak += 1
+            self.total_completions += 1
+
+            if self.current_streak > self.longest_streak:
+                self.longest_streak = self.current_streak
+
+            milestone_achieved = self.check_milestone()
+        else:
+            self.current_streak = 0
+
+        self.save()
+        return milestone_achieved
+
+    def check_milestone(self):
+        milestone_thresholds = {5, 10, 20, 30, 40, 50}
+        if self.total_completions in milestone_thresholds:
+            milestone_message = f"Congratulations! You've reached {self.total_completions} completions!"
+            self.milestone_dates.append(str(timezone.now().date()))
+            self.save()
+        return None
+
+    def __str__(self):
+        return f'{self.user.username} - {self.habit_stack}: Current Streak: {self.current_streak}, Longest: {self.longest_streak}, Total: {self.total_completions}'

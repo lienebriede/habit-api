@@ -51,6 +51,27 @@ The `HabitStackingLog` model tracks the progress of a user's habit stack on a da
 - `date`: A DateField that records the date for the log entry, which corresponds to the specific day the habit stacking progress is being tracked.
 - `completed`: A BooleanField that indicates whether the user has completed the habit stack for the given day. The default value is False.
 
+### StreakAndMilestoneTracker Model
+
+The `StreakAndMilestoneTracker` model tracks a user's progress and achievements for a specific habit stack. It records streaks, milestones, and completions to provide feedback for habit formation.
+
+*Fields:*
+
+- `user`: A ForeignKey linking to the `User` model, associating the tracker with a specific user.
+- `habit_stack`: A ForeignKey linking to the `HabitStacking` model, specifying the habit stack being tracked.
+- `current_streak`: An IntegerField that keeps track of the user's ongoing streak of consecutive completions. Defaults to 0.
+- `longest_streak`: An IntegerField that records the user's highest streak achieved. Defaults to 0.
+- `total_completions`: An IntegerField storing the total number of times the user has completed the habit stack. Defaults to 0.
+- `milestone_dates`: A JSONField storing the dates on which significant milestones were achieved. Defaults to an empty list.
+
+*Methods:*
+
+- `update_streak_and_completions(self, completed_today)`
+Updates the current streak, total completions, and longest streak when a habit is marked as completed. If the streak breaks, it resets to 0. Also checks for milestones and appends them to `milestone_dates`. Returns a milestone message if applicable.
+
+- `check_milestone(self)`
+Compares the total completions against predefined milestone thresholds. If a milestone is achieved, appends the current date to `milestone_dates` and generates a message.
+
 # API Endpoints
 
 | URL | Notes | HTTP Method | CRUD Operations |

@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import HabitStackingListView, HabitStackingDetailView, HabitStackingLogListView, HabitStackingLogEditView 
+from .views import (
+    HabitStackingListView,
+    HabitStackingDetailView,
+    HabitStackingLogListView, 
+    HabitStackingLogEditView
+)  
 
 urlpatterns = [
     path('habit-stacking/', HabitStackingListView.as_view()),

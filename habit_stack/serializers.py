@@ -1,8 +1,11 @@
 from rest_framework import serializers
-from .models import HabitStacking, PredefinedHabit, HabitStackingLog
+from .models import HabitStacking, PredefinedHabit, HabitStackingLog, StreakAndMilestoneTracker
 
-# Serializer for HabitStacking model
 class HabitStackingSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the HabitStacking model.
+    Handles validation and ensures that users can only define unique habits
+    """
     user = serializers.ReadOnlyField(source='user.username')
     predefined_habit1 = serializers.PrimaryKeyRelatedField(
         queryset=PredefinedHabit.objects.all(),
@@ -81,14 +84,37 @@ class HabitStackingSerializer(serializers.ModelSerializer):
 
         return data
 
-# Serializer for HabitStackingLog
 class HabitStackingLogSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the HabitStackingLog model.
+    Provides additional fields for streak and milestone messages.
+    """
     user = serializers.ReadOnlyField(source='user.username')
     habit_stack = HabitStackingSerializer()
+    streak_message = serializers.SerializerMethodField()
+    milestone_message = serializers.SerializerMethodField()
 
     class Meta:
         model = HabitStackingLog
-        fields = ['id', 'habit_stack', 'user', 'date', 'completed']
+        fields = ['id', 'habit_stack', 'user', 'date', 'completed', 'streak_message', 'milestone_message']
+
+    def get_streak_message(self, obj):
+        """
+        Returns a message if the user is on a streak of at least 2 days.
+        """
+        tracker = StreakAndMilestoneTracker.objects.filter(user=obj.user, habit_stack=obj.habit_stack).first()
+        if tracker and tracker.current_streak >= 2:
+            return f"You're on a {tracker.current_streak}-day streak! Keep it up!"
+        return None
+
+    def get_milestone_message(self, obj):
+        """
+        Returns a milestone message if today is a milestone day.
+        """
+        tracker = StreakAndMilestoneTracker.objects.filter(user=obj.user, habit_stack=obj.habit_stack).first()
+        if tracker and str(obj.date) in tracker.milestone_dates:
+            return f"Milestone achieved on this date: {obj.date}!"
+        return None
 
 # Serializer for HabitStackingLogEdit
 class HabitStackingLogEditSerializer(serializers.ModelSerializer):
