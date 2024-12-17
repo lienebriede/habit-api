@@ -35,6 +35,15 @@ The `HabitStacking` model allows users to create custom habit stacks by choosing
 - `custom_habit2`: A CharField that allows the user to define a custom habit for the second habit stack position. This field is optional and can be left blank.
 - `goal:` A CharField that represents the goal associated with the habit stack. It can either be set to 'DAILY' (the default value) or 'NO_GOAL'.
 - `created_at`: A DateTimeField that automatically records when the habit stack is created.
+- `active_until`: A DateField that defines the duration until which the habit stack is considered active. This field is used for extending habit stacks. Defaults to 7 days from the creation date.
+
+*Methods:*
+
+- `extend_habit(days)`
+Extends the active period of the habit stack by the specified number of days. This also sets the goal back to 'DAILY'.
+
+- `check_and_deactivate()`
+Checks if the habit stack is active_until date has passed. If so, it sets the goal to 'NO_GOAL' and saves the changes.
 
 *Note:*
 
@@ -87,7 +96,8 @@ Compares the total completions against predefined milestone thresholds. If a mil
 | `/habit-stacking/<int:pk>/` | Retrieve a specific habit stack by ID. | GET | Read |
 || Update a habit stack for the authenticated user. | PUT | Update |
 || Delete a habit stack for the authenticated user. | DELETE | Delete |
-| `/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
+| `/habit-stacking/<int:pk>/extend/` | Extend the duration of a specific habit stack by a specified number of days.| POST | Create | 
+|`/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
 | `habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
 
 # Testing

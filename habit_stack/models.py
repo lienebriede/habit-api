@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from datetime import timedelta
 
 class PredefinedHabit(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -25,9 +26,26 @@ class HabitStacking(models.Model):
         default='DAILY'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    active_until = models.DateField(default=timezone.now)
 
     class Meta:
         unique_together = ('user', 'predefined_habit1', 'custom_habit1', 'predefined_habit2', 'custom_habit2') 
+
+    def extend_habit(self, days):
+        """
+        Extend the active period of the habit stack.
+        """
+        self.active_until = timezone.now().date() + timedelta(days=days)
+        self.goal = 'DAILY'
+        self.save()
+
+    def check_and_deactivate(self):
+        """
+        Deactivate the habit stack if active_until is passed.
+        """
+        if timezone.now().date() > self.active_until:
+            self.goal = 'NO_GOAL'
+            self.save()
 
     def __str__(self):
         habit1 = self.predefined_habit1.name if self.predefined_habit1 else self.custom_habit1

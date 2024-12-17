@@ -3,12 +3,12 @@ from .models import HabitStacking, HabitStackingLog, StreakAndMilestoneTracker
 from .serializers import (
     HabitStackingSerializer, 
     HabitStackingLogSerializer,
-    HabitStackingLogEditSerializer) 
+    HabitStackingLogEditSerializer,
+    HabitExtendSerializer) 
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
 
-# HabitStacking list and create view
 class HabitStackingListView(generics.ListCreateAPIView):
     """
     Handles listing all habit stacks for the logged-in user and creating new ones.
@@ -39,7 +39,6 @@ class HabitStackingListView(generics.ListCreateAPIView):
                     completed=False
                 )
   
-# HabitStacking retrieve, update, and delete view
 class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Handles retrieving, updating, or deleting a specific habit stack.
@@ -59,7 +58,6 @@ class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         serializer.save(user=self.request.user)
 
-# HabitStackingLog list view
 class HabitStackingLogListView(generics.ListAPIView):
     """
     Lists all habit logs for the logged-in user, ordered by date.
@@ -73,7 +71,6 @@ class HabitStackingLogListView(generics.ListAPIView):
         """
         return HabitStackingLog.objects.filter(user=self.request.user).order_by('date')
 
-# HabitStackingLog update view
 class HabitStackingLogEditView(generics.UpdateAPIView):
     """
     Handles updating a specific habit log, marking it as completed.
@@ -118,3 +115,17 @@ class HabitStackingLogEditView(generics.UpdateAPIView):
         response.data['streak_message'] = getattr(self, 'streak_message', None)
         response.data['milestone_message'] = getattr(self, 'milestone_message', None)
         return response
+
+class HabitExtendView(generics.UpdateAPIView):
+    """
+    Extends a habit stack's active period.
+    """
+    queryset = HabitStacking.objects.all()
+    serializer_class = HabitExtendSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Restrict the queryset to habits owned by the authenticated user.
+        """
+        return HabitStacking.objects.filter(user=self.request.user)

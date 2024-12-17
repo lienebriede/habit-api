@@ -3,7 +3,8 @@ from .views import (
     HabitStackingListView,
     HabitStackingDetailView,
     HabitStackingLogListView, 
-    HabitStackingLogEditView
+    HabitStackingLogEditView,
+    HabitExtendView
 )  
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('habit-stacking/<int:pk>/', HabitStackingDetailView.as_view()),
     path('habit-stacking-logs/', HabitStackingLogListView.as_view()),
     path('habit-stacking-logs/<int:pk>/', HabitStackingLogEditView.as_view()),
+    path('habit-stacking/<int:pk>/extend/', HabitExtendView.as_view()),
 ]

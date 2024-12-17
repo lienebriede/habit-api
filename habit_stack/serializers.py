@@ -117,8 +117,11 @@ class HabitStackingLogSerializer(serializers.ModelSerializer):
             return f"Milestone achieved on this date: {obj.date}!"
         return None
 
-# Serializer for HabitStackingLogEdit
 class HabitStackingLogEditSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating the HabitStackingLog model.
+    Allows modification of the 'completed' status and the 'date' field for the habit log.
+    """
     class Meta:
         model = HabitStackingLog
         fields = ['completed', 'date']
@@ -130,3 +133,21 @@ class HabitStackingLogEditSerializer(serializers.ModelSerializer):
         if data.get('date') and data['date'] > date.today():
             raise serializers.ValidationError("You cannot log habits for future dates.")
         return data
+
+class HabitExtendSerializer(serializers.ModelSerializer):
+    """
+    Serializer for extending the active period of a HabitStacking instance.
+    """
+    extension_days = serializers.IntegerField(write_only=True, min_value=7, max_value=14)
+
+    class Meta:
+        model = HabitStacking
+        fields = ['id', 'active_until', 'goal', 'extension_days']
+
+    def update(self, instance, validated_data):
+        """
+        Update the habit stack to extend its active period.
+        """
+        extension_days = validated_data.pop('extension_days', 7)
+        instance.extend_habit(extension_days)
+        return instance
