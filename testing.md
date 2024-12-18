@@ -23,6 +23,9 @@
 |GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|PASS|
 | PATCH `habit-stacking-logs/<int:pk>/`|Update the completed status of a habit stacking log (mark as complete or undo).|Return 200 OK with the updated log reflecting the completed status.|<img src="documentation/update_complete.png"><img src="documentation/Update_complete_undo.png">|
 | PATCH `habit-stacking-logs/<int:pk>/`| Attempt to mark a habit stack complete in future time raises an error.| Returns a 400 Bad Request and a validation message.| <img src="documentation/error_future_date.png">|
+|PUT `/habit-stacking/<int:pk>/extend/`|Extend the active period of a habit stack by 14 days.|Returns 200 OK with the `active_until` field updated to 14 days from today.| PASS <img src="documentation/test_extend_14.png">|
+| PUT `/habit-stacking/<int:pk>/extend/`| Attempt to extend with invalid data - less than 7 days|Returns 400 Bad Request with validation error message.|<img src="documentation/test_less_than7.png">|
+|GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
 
 # Automated Tests
 
@@ -77,3 +80,14 @@
 |`test_no_future_logs_allowed`| Habit completion should not be logged for future dates, and streak/completions should remain unchanged.|PASS|
 
 <img src="documentation/tests_added_streaks.png">
+
+### HabitStackingExtendAndLogTests
+| Test | Expected Result | Outcome |
+| ---- | --------------- | ------- |
+|`test_extend_habit_stack_success`|Should successfully extend the active_until field by 7 or 14 days and return 200 OK|PASS|
+|`test_extend_habit_stack_unauthenticated`|Should return 403 Forbidden for unauthenticated users attempting to extend a habit stack|PASS|
+|`test_extend_habit_stack_not_found`|Should return 404 Not Found for an invalid habit stack ID|PASS|
+|`test_habit_stacking_logs_updated_after_extend`|Should create new logs for the extended dates after successfully extending the habit stack|PASS|
+|`test_habit_stacking_logs_no_duplicates`|Should not create duplicate logs if the habit stack is extended multiple times|PASS|
+
+<img src="documentation/test_extend_habit.png">

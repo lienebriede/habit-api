@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.response import Response
 from .models import HabitStacking, HabitStackingLog, StreakAndMilestoneTracker
 from .serializers import (
     HabitStackingSerializer, 
@@ -129,3 +130,31 @@ class HabitExtendView(generics.UpdateAPIView):
         Restrict the queryset to habits owned by the authenticated user.
         """
         return HabitStacking.objects.filter(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Override the update method to handle extending the habit stack.
+        """
+        habit_stack = self.get_object()
+
+        # Get the extension days from the request data (default to 7 days)
+        extension_days = request.data.get('extension_days', 7)
+
+        try:
+            # Extend the habit stack using the updated method
+            habit_stack.extend_habit(int(extension_days))
+            habit_stack.save()
+
+            # Create the response with updated data
+            response_data = {
+                "success": True,
+                "message": f"Habit successfully extended by {extension_days} days.",
+                "id": habit_stack.id,
+                "active_until": habit_stack.active_until,
+                "goal": habit_stack.goal,
+            }
+            return Response(response_data, status=200)
+
+        except Exception as e:
+            # Return an error response if something goes wrong
+            return Response({"success": False, "error": str(e)}, status=400)

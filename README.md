@@ -112,8 +112,13 @@ During testing, users were able to access and modify each other's profiles and h
 *Fix:*
 Permissions were updated to ensure only authenticated users can access their own data. A custom permission was implemented to enforce ownership, allowing users to view, modify, or delete only their own habit stacks. The permission class `IsOwnerOrReadOnly` was changed to `IsAuthenticatedAndOwnerOrReadOnly` to ensure that users could only interact with their own data.
 
-2.
+2. 
 During testing, users were able to mark habits as completed for future dates, resulting in invalid milestone tracking and streaks being incorrectly calculated. This violated the websites's principle of reflecting real-time progress.
 
 *Fix:*
 Validation logic was added to the `HabitStackingLogSerializer` and the `StreakAndMilestoneTracker` model to restrict habit completion to the current or past dates only. Any attempt to mark a habit as completed on a future date now raises a `ValidationError`. This ensures data integrity and realistic progress tracking.
+
+3. 
+During testing, attempting to extend the active period of a habit stack occasionally triggered an `IntegrityError` due to duplicate log entries. This happened when a request tried to create a habit log for a combination of `habit_stack_id`, `user_id`, and `date` that already existed.
+
+*Fix:* To address this issue, a duplicate-check mechanism was added to the `HabitExtendView`. Before creating new habit logs, the backend now filters for existing logs that match the intended date range and skips those dates to avoid duplication. Additionally, the response was updated to return a meaningful success or partial-success message.

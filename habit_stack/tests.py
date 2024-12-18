@@ -217,6 +217,7 @@ class HabitStackingLogListViewTests(APITestCase):
             expected_date = (timezone.now().date() + timedelta(days=i)).isoformat()
             self.assertEqual(log["date"], expected_date)
             self.assertFalse(log["completed"])
+            
 
 class HabitStackingLogEditViewTests(APITestCase):
 
@@ -355,3 +356,82 @@ class StreakAndMilestoneTrackerTests(APITestCase):
         self.assertEqual(self.tracker.current_streak, 0)
         self.assertEqual(self.tracker.total_completions, 0)
         self.assertIsNone(milestone_message)
+
+class HabitStackingExtendAndLogTests(APITestCase):
+
+    def setUp(self):
+        """Set up test data for HabitStacking extend and log view tests."""
+        
+        self.user1 = User.objects.create_user(username='Maija', password='001')
+        self.user2 = User.objects.create_user(username='Janis', password='002')
+
+        self.habit1 = PredefinedHabit.objects.create(name='Habit 1')
+        self.habit2 = PredefinedHabit.objects.create(name='Habit 2')
+
+        self.habit_stack1 = HabitStacking.objects.create(
+            user=self.user1,
+            predefined_habit1=self.habit1,
+            predefined_habit2=self.habit2,
+            goal='DAILY'
+        )
+        self.habit_stack2 = HabitStacking.objects.create(
+            user=self.user2,
+            predefined_habit1=self.habit1,
+            custom_habit2='Custom Habit 2',
+            goal='NO_GOAL'
+        )
+    
+    def test_extend_habit_stack_success(self):
+        """Test if the habit stack can be extended successfully by 7 days."""
+        self.client.login(username='Maija', password='001')
+        data = {'extension_days': 7}
+        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.habit_stack1.refresh_from_db()
+        self.assertEqual(self.habit_stack1.active_until, (timezone.now().date() + timedelta(days=7)))
+    
+    def test_extend_habit_stack_unauthenticated(self):
+        """Test if unauthenticated users are prevented from extending a habit stack."""
+        data = {'extension_days': 7}
+        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_extend_habit_stack_not_found(self):
+        """Test if an invalid habit stack ID returns a not found error."""
+        self.client.login(username='Maija', password='001')
+        data = {'extension_days': 7}
+        response = self.client.patch('/habit-stacking/9999/extend/', data, format='json')  # Invalid ID
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_habit_stacking_logs_updated_after_extend(self):
+        """Test if new logs are created after extending the habit stack."""
+        self.client.login(username='Maija', password='001')
+        initial_log_count = HabitStackingLog.objects.count()
+        data = {'extension_days': 7}
+        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_log_count = HabitStackingLog.objects.count()
+        self.assertEqual(new_log_count, initial_log_count + 7)
+
+    def test_habit_stacking_logs_no_duplicates(self):
+        """Test if duplicate logs are not created when extending the habit stack multiple times.
+        First extend for 7 days, then for 14 and expect 14 days in total."""
+        self.client.login(username='Maija', password='001')
+        initial_log_count = HabitStackingLog.objects.count()
+
+        data = {'extension_days': 7}
+        response1 = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        self.assertEqual(response1.status_code, status.HTTP_200_OK)
+        self.habit_stack1.refresh_from_db()
+        new_log_count_1 = HabitStackingLog.objects.count()
+        self.assertEqual(new_log_count_1, initial_log_count + 7)
+
+        data = {'extension_days': 14}
+        response2 = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.habit_stack1.refresh_from_db()
+        new_log_count_2 = HabitStackingLog.objects.count()
+
+        self.assertEqual(new_log_count_2, initial_log_count + 14)
+        log_dates = HabitStackingLog.objects.filter(habit_stack=self.habit_stack1).values_list('date', flat=True)
+        self.assertEqual(len(log_dates), len(set(log_dates)))

@@ -33,11 +33,40 @@ class HabitStacking(models.Model):
 
     def extend_habit(self, days):
         """
-        Extend the active period of the habit stack.
+        Extend the active period of the habit stack and ensure no duplicate logs are created.
         """
+        old_active_until = self.active_until
         self.active_until = timezone.now().date() + timedelta(days=days)
         self.goal = 'DAILY'
         self.save()
+
+        # Calculate new dates
+        new_dates = [
+            old_active_until + timedelta(days=i)
+            for i in range(1, (self.active_until - old_active_until).days + 1)
+        ]
+
+        # Exclude dates that already have logs
+        existing_dates = HabitStackingLog.objects.filter(
+            habit_stack=self,
+            user=self.user,
+            date__in=new_dates
+        ).values_list('date', flat=True)
+
+        logs_to_create = [
+            HabitStackingLog(
+                habit_stack=self,
+                user=self.user,
+                date=log_date,
+                completed=False
+            )
+            for log_date in new_dates if log_date not in existing_dates
+        ]
+
+        # Create logs only for new dates
+        HabitStackingLog.objects.bulk_create(logs_to_create)
+
+        return {"success": True, "message": "Habit stack extended successfully."}
 
     def check_and_deactivate(self):
         """
