@@ -68,14 +68,6 @@ class HabitStacking(models.Model):
 
         return {"success": True, "message": "Habit stack extended successfully."}
 
-    def check_and_deactivate(self):
-        """
-        Deactivate the habit stack if active_until is passed.
-        """
-        if timezone.now().date() > self.active_until:
-            self.goal = 'NO_GOAL'
-            self.save()
-
     def __str__(self):
         habit1 = self.predefined_habit1.name if self.predefined_habit1 else self.custom_habit1
         habit2 = self.predefined_habit2.name if self.predefined_habit2 else self.custom_habit2

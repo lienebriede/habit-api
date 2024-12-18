@@ -42,9 +42,6 @@ The `HabitStacking` model allows users to create custom habit stacks by choosing
 - `extend_habit(days)`
 Extends the active period of the habit stack by the specified number of days. This also sets the goal back to 'DAILY'.
 
-- `check_and_deactivate()`
-Checks if the habit stack is active_until date has passed. If so, it sets the goal to 'NO_GOAL' and saves the changes.
-
 *Note:*
 
 It is not possible to create a habit stack with all habit fields (both predefined and custom) left empty. At least one habit field must be provided for each position in the stack (either predefined or custom).
@@ -104,7 +101,7 @@ Compares the total completions against predefined milestone thresholds. If a mil
 
 See [testing.md](testing.md) for all the tests conducted.
 
-# Issues
+# Bugs and Issues
 
 1. 
 During testing, users were able to access and modify each other's profiles and habit stacks, violating the website's privacy principles. The error messages were unclear, revealing the need for stricter permissions to ensure data security.
@@ -122,3 +119,9 @@ Validation logic was added to the `HabitStackingLogSerializer` and the `StreakAn
 During testing, attempting to extend the active period of a habit stack occasionally triggered an `IntegrityError` due to duplicate log entries. This happened when a request tried to create a habit log for a combination of `habit_stack_id`, `user_id`, and `date` that already existed.
 
 *Fix:* To address this issue, a duplicate-check mechanism was added to the `HabitExtendView`. Before creating new habit logs, the backend now filters for existing logs that match the intended date range and skips those dates to avoid duplication. Additionally, the response was updated to return a meaningful success or partial-success message.
+
+4. 
+The `check_and_deactivate` function in the HabitStacking model is designed to automatically set a habit stack's goal to `'NO_GOAL'` once the `active_until` date is passed. However, this function requires explicit calls to execute, and to automate it, a cron job or a scheduled task would need to be installed. Without this automation, the function remains unused and inactive.
+
+*Decision:*
+The habit stack can remain set to `'DAILY'`, and users can manually extend it when desired. Logs will still be generated from the date the user clicks the extend button, ensuring no loss of functionality. The `check_and_deactivate` function has been removed from the model, if needed, a cron job can be added to periodically call this function and automatically deactivate outdated habit stacks. For now, this enhancement is deferred to keep the system simpler and maintainable.
