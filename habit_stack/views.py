@@ -1,11 +1,12 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import HabitStacking, HabitStackingLog, StreakAndMilestoneTracker
+from .models import HabitStacking, HabitStackingLog, StreakAndMilestoneTracker, MilestonePost
 from .serializers import (
     HabitStackingSerializer, 
     HabitStackingLogSerializer,
     HabitStackingLogEditSerializer,
-    HabitExtendSerializer) 
+    HabitExtendSerializer,
+    MilestonePostSerializer) 
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
@@ -158,3 +159,40 @@ class HabitExtendView(generics.UpdateAPIView):
         except Exception as e:
             # Return an error response if something goes wrong
             return Response({"success": False, "error": str(e)}, status=400)
+
+class FeedView(generics.ListAPIView):
+    """
+    API view to list all milestone posts in the feed.
+    """
+    queryset = MilestonePost.objects.filter(shared_on_feed=True).order_by('-created_at')
+    serializer_class = MilestonePostSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+
+class ShareMilestonePostView(generics.UpdateAPIView):
+    """
+    Endpoint for sharing milestone posts to the feed.
+    """
+    queryset = MilestonePost.objects.all()
+    serializer_class = MilestonePostSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+
+    def update(self, request, *args, **kwargs):
+        """
+        Handle the user's confirmation to share a milestone post.
+        """
+        milestone_post = self.get_object()
+        if milestone_post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to share this milestone post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        milestone_post.shared_on_feed = True
+        milestone_post.save()
+        return Response(
+            {
+                "success": True,
+                "message": "Milestone post shared successfully.",
+                "id": milestone_post.id,
+            },
+            status=status.HTTP_200_OK,
+        )

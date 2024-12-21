@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import HabitStacking, PredefinedHabit, HabitStackingLog, StreakAndMilestoneTracker
+from .models import (
+    HabitStacking, 
+    PredefinedHabit, 
+    HabitStackingLog, 
+    StreakAndMilestoneTracker, 
+    MilestonePost
+    ) 
 from datetime import date
 
 class HabitStackingSerializer(serializers.ModelSerializer):
@@ -151,3 +157,15 @@ class HabitExtendSerializer(serializers.ModelSerializer):
         extension_days = validated_data.pop('extension_days', 7)
         instance.extend_habit(extension_days)
         return instance
+
+
+class MilestonePostSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the MilestonePost model. Represents
+    milestone feed entries.
+    """
+
+    class Meta:
+        model = MilestonePost
+        fields = ['id', 'user', 'habit_stack', 'message', 'created_at', 'shared_on_feed']
+        read_only_fields = ['id', 'message']

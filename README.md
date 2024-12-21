@@ -78,6 +78,18 @@ Updates the current streak, total completions, and longest streak when a habit i
 - `check_milestone(self)`
 Compares the total completions against predefined milestone thresholds. If a milestone is achieved, appends the current date to `milestone_dates` and generates a message.
 
+### MilestonePost Model
+
+The `MilestonePost` model represents a milestone achieved by a user for a specific habit stack. It allows users to share their achievements as posts.
+
+*Fields:*
+
+- `user`: A ForeignKey linking to the User model, associating the post with a specific user.
+- `habit_stack`: A ForeignKey linking to the HabitStacking model, specifying the related habit stack.
+- `message`: A TextField containing the milestone message.
+- `created_at`: A DateTimeField that automatically records when the milestone post was created.
+- `shared_on_feed`: A BooleanField indicating whether the post has been shared on the feed. Defaults to False.
+
 # API Endpoints
 
 | URL | Notes | HTTP Method | CRUD Operations |
@@ -96,7 +108,8 @@ Compares the total completions against predefined milestone thresholds. If a mil
 | `/habit-stacking/<int:pk>/extend/` | Extend the duration of a specific habit stack by a specified number of days.| POST | Create | 
 |`/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
 | `habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
-
+|`/milestone-posts/<int:pk>/share/`|Share a specific milestone post on the user's feed.|POST|Update|
+|`/feed/`|Retrieve a feed of shared milestone posts from all users.|GET|Read|
 # Testing
 
 See [testing.md](testing.md) for all the tests conducted.

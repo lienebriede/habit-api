@@ -26,6 +26,10 @@
 |PUT `/habit-stacking/<int:pk>/extend/`|Extend the active period of a habit stack by 14 days.|Returns 200 OK with the `active_until` field updated to 14 days from today.| PASS <img src="documentation/test_extend_14.png">|
 | PUT `/habit-stacking/<int:pk>/extend/`| Attempt to extend with invalid data - less than 7 days|Returns 400 Bad Request with validation error message.|<img src="documentation/test_less_than7.png">|
 |GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
+|POST `/milestone-posts/<int:pk>/share/`|Share a milestone post to the feed.|Returns 201 Created, and the post appears in the feed.||
+|GET `/feed/`|Retrieve a list of shared milestones visible to the authenticated user.|Returns 200 OK with a list of milestone posts sorted in reverse chronological order.||
+GET `/feed/`|Ensure the feed includes milestones shared by the logged-in user and others.|Returns 200 OK with all relevant milestones visible.|
+
 
 # Automated Tests
 
@@ -51,24 +55,18 @@
 | `test_delete_habit_stack` | Should delete the habit stack and return `204 No Content`|PASS|
 | `test_delete_habit_stack_forbidden` | Should return `403 Forbidden` when trying to delete someone else's habit stack |PASS|
 
-<img src="documentation/habit_stacking_tests_pass.png">
-
 ### HabitStackingLogListViewTests
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
 | `test_habit_stacking_log_list_authenticated`| Should return a list of habit stacking logs for the authenticated user. |PASS|
 | `test_habit_stacking_log_list_unauthenticated`|Should return `403 Forbidden` when an unauthenticated user tries to access the habit stacking logs.|PASS|
-|`test_habit_stacking_log_auto_creation_7_days`|Should automatically create 7 habit stacking logs for the authenticated user, one for each of the next 7 days, when a habit stack is created with a DAILY goal.|PASS
-
-<img src="documentation/habit_stack_automated_test.png">
+|`test_habit_stacking_log_auto_creation_7_days`|Should automatically create 7 habit stacking logs for the authenticated user, one for each of the next 7 days, when a habit stack is created with a DAILY goal.|PASS|
 
 ### HabitStackingLogEditViewTests
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
 | `test_habit_stacking_log_update_complete`|Should update the log's completed status to True.|PASS|
 |`test_habit_stacking_log_update_undo`|Should update the log's completed status back to False.|PASS|
-
-<img src="documentation/habit_stack_tests_pass.png">
 
 ### StreakAndMilestoneTrackerTests
 | Test | Expected Result | Outcome |
@@ -79,8 +77,6 @@
 |`test_multiple_milestones`|Multiple milestones should be achieved and milestone dates should be recorded.|PASS|
 |`test_no_future_logs_allowed`| Habit completion should not be logged for future dates, and streak/completions should remain unchanged.|PASS|
 
-<img src="documentation/tests_added_streaks.png">
-
 ### HabitStackingExtendAndLogTests
 | Test | Expected Result | Outcome |
 | ---- | --------------- | ------- |
@@ -90,4 +86,11 @@
 |`test_habit_stacking_logs_updated_after_extend`|Should create new logs for the extended dates after successfully extending the habit stack|PASS|
 |`test_habit_stacking_logs_no_duplicates`|Should not create duplicate logs if the habit stack is extended multiple times|PASS|
 
-<img src="documentation/test_extend_habit.png">
+### MilestonePostTests
+| Test | Expected Result | Outcome |
+| ---- | --------------- | ------- |
+|`test_share_milestone_post_success`|Should allow a user to successfully share a milestone post to the feed.|PASS|
+|`test_share_milestone_post_unauthorized`|Should prevent unauthorized users from sharing milestone posts.|PASS|
+|`test_view_shared_milestones_on_feed`|Should display both the user's and other users' shared milestone posts.|PASS|
+
+<img src="documentation/automated_tests_habit_stack.png">

@@ -4,7 +4,8 @@ from .models import(
     HabitStacking, 
     PredefinedHabit, 
     HabitStackingLog, 
-    StreakAndMilestoneTracker) 
+    StreakAndMilestoneTracker,
+    MilestonePost)
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
@@ -435,3 +436,86 @@ class HabitStackingExtendAndLogTests(APITestCase):
         self.assertEqual(new_log_count_2, initial_log_count + 14)
         log_dates = HabitStackingLog.objects.filter(habit_stack=self.habit_stack1).values_list('date', flat=True)
         self.assertEqual(len(log_dates), len(set(log_dates)))
+
+class MilestonePostTestCase(APITestCase):
+    """Set up test data for testing MilestonePost functionality."""
+    def setUp(self):
+        self.user = User.objects.create_user(username='Maija', password='password123')
+        self.habit_stack = HabitStacking.objects.create(
+            user=self.user,
+            custom_habit1="Run 30 min",
+            custom_habit2="Meditate",
+        )
+        self.milestone_post = MilestonePost.objects.create(
+            user=self.user,
+            habit_stack=self.habit_stack,
+            message="Completed 10 days of my habits!",
+        )
+        self.url = f'/milestone-posts/{self.milestone_post.id}/share/'
+        self.client.login(username='Maija', password='password123')
+
+    def test_share_milestone_post_success(self):
+        """Test if a milestone post can be shared successfully."""
+        response = self.client.patch(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(MilestonePost.objects.get(id=self.milestone_post.id).shared_on_feed)
+
+    def test_share_milestone_post_unauthorized(self):
+        """Test if unauthorized users cannot share a milestone post."""
+        self.client.logout()
+        response = self.client.patch(self.url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class FeedViewTestCase(APITestCase):
+    def setUp(self):
+        """
+        Create users, habit stacks, and milestone posts for testing.
+        """
+        # Create users Maija and Janis
+        self.user1 = User.objects.create_user(username='Maija', password='password123')
+        self.user2 = User.objects.create_user(username='Janis', password='password123')
+
+        # Create habit stacks for each user
+        self.habit_stack1 = HabitStacking.objects.create(user=self.user1, custom_habit1='Morning Run', custom_habit2='Meditation')
+        self.habit_stack2 = HabitStacking.objects.create(user=self.user2, custom_habit1='Reading', custom_habit2='Jogging')
+
+        # Create milestone posts for each user
+        self.shared_post_user1 = MilestonePost.objects.create(
+            user=self.user1,
+            habit_stack=self.habit_stack1,
+            message="Maija's Shared Milestone",
+            shared_on_feed=True
+        )
+        self.shared_post_user2 = MilestonePost.objects.create(
+            user=self.user2,
+            habit_stack=self.habit_stack2,
+            message="Janis's Shared Milestone",
+            shared_on_feed=True
+        )
+        self.private_post_user1 = MilestonePost.objects.create(
+            user=self.user1,
+            habit_stack=self.habit_stack1,
+            message="Maija's Private Milestone",
+            shared_on_feed=False
+        )
+
+    def test_view_shared_milestones_on_feed(self):
+        """
+        Test that a user can see shared milestone posts from themselves and others.
+        """
+        self.client.login(username='Maija', password='password123')
+
+        # Fetch the feed and assert response is successful
+        response = self.client.get('/feed/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        shared_posts = response.data
+        shared_ids = [post['id'] for post in shared_posts]
+
+        # Verify shared posts are included
+        self.assertIn(self.shared_post_user1.id, shared_ids)
+        self.assertIn(self.shared_post_user2.id, shared_ids)
+
+        # Verify private post is excluded
+        self.assertNotIn(self.private_post_user1.id, shared_ids)
+        
