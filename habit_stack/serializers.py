@@ -27,7 +27,7 @@ class HabitStackingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HabitStacking
-        fields = ['id', 'user', 'predefined_habit1', 'custom_habit1', 'predefined_habit2', 'custom_habit2', 'goal', 'created_at']
+        fields = ['id', 'user', 'predefined_habit1', 'custom_habit1', 'predefined_habit2', 'custom_habit2', 'created_at']
 
     def validate(self, data):
         """
@@ -38,7 +38,6 @@ class HabitStackingSerializer(serializers.ModelSerializer):
         custom_habit1 = data.get('custom_habit1')
         predefined_habit2 = data.get('predefined_habit2')
         custom_habit2 = data.get('custom_habit2')
-        goal = data.get('goal')
 
         # Validation for habit1 and habit2
         if predefined_habit1 and custom_habit1:
@@ -84,10 +83,6 @@ class HabitStackingSerializer(serializers.ModelSerializer):
 
         if existing_habit_stacks.exists():
             raise serializers.ValidationError("A habit stack with these details already exists.")
-
-        # Validate goal value
-        if goal not in ['DAILY', 'NO_GOAL']:
-            raise serializers.ValidationError("Invalid goal value.")
 
         return data
 
@@ -148,7 +143,7 @@ class HabitExtendSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HabitStacking
-        fields = ['id', 'active_until', 'goal', 'extension_days']
+        fields = ['id', 'active_until', 'extension_days']
 
     def update(self, instance, validated_data):
         """

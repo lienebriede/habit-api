@@ -27,19 +27,18 @@ class HabitStackingListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """
         Creates a new habit stack for the logged-in user and automatically creates
-        logs for the next 7 days if the goal is 'DAILY'.
+        logs for the next 7 days.
         """
         habit_stack = serializer.save(user=self.request.user)
 
-        if habit_stack.goal == 'DAILY':
-            for i in range(7):
-                log_date = timezone.now().date() + timedelta(days=i)
-                HabitStackingLog.objects.create(
-                    habit_stack=habit_stack,
-                    user=self.request.user,
-                    date=log_date,
-                    completed=False
-                )
+        for i in range(7):
+            log_date = timezone.now().date() + timedelta(days=i)
+            HabitStackingLog.objects.create(
+                habit_stack=habit_stack,
+                user=self.request.user,
+                date=log_date,
+                completed=False
+            )
   
 class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -58,6 +57,7 @@ class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         Ensures the habit stack is updated for the logged-in user.
         """
+        instance = self.get_object()
         serializer.save(user=self.request.user)
 
 class HabitStackingLogListView(generics.ListAPIView):
@@ -152,7 +152,6 @@ class HabitExtendView(generics.UpdateAPIView):
                 "message": f"Habit successfully extended by {extension_days} days.",
                 "id": habit_stack.id,
                 "active_until": habit_stack.active_until,
-                "goal": habit_stack.goal,
             }
             return Response(response_data, status=200)
 

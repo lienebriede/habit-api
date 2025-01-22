@@ -29,13 +29,11 @@ class HabitStackingListViewTests(APITestCase):
             user=self.user1,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
         self.habit_stack2 = HabitStacking.objects.create(
             user=self.user2,
             predefined_habit1=self.habit1,
             custom_habit2='Custom Habit 2',
-            goal='NO_GOAL'
         )
 
     def test_habit_stacking_list_view_authenticated(self):
@@ -57,7 +55,6 @@ class HabitStackingListViewTests(APITestCase):
         data = {
             'custom_habit1': 'New habit1',
             'custom_habit2': 'New habit2',
-            'goal': 'DAILY',
         }
         response = self.client.post('/habit-stacking/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -77,7 +74,6 @@ class HabitStackingListViewTests(APITestCase):
         data = {
             'predefined_habit1': self.habit1.id,
             'predefined_habit2': self.habit2.id,
-            'goal': 'DAILY'
         }
         response = self.client.post('/habit-stacking/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -98,13 +94,11 @@ class HabitStackingDetailViewTests(APITestCase):
             user=self.user1,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
         self.habit_stack2 = HabitStacking.objects.create(
             user=self.user2,
             predefined_habit1=self.habit1,
             custom_habit2='Custom Habit 2',
-            goal='NO_GOAL'
         )
 
     def test_habit_stacking_detail_view_authenticated(self):
@@ -130,7 +124,6 @@ class HabitStackingDetailViewTests(APITestCase):
         data = {
             'custom_habit1': 'Updated habit1',
             'predefined_habit2': self.habit2.id,
-            'goal': 'NO_GOAL'
         }
         response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -138,7 +131,7 @@ class HabitStackingDetailViewTests(APITestCase):
     def test_update_habit_stack_forbidden(self):
         """Test if a user is forbidden from updating another user's habit stack."""
         self.client.login(username='Janis', password='002')
-        data = {'goal': 'NO_GOAL'}
+        data = {'custom_habit1': 'Updated habit1'}
         response = self.client.put(f'/habit-stacking/{self.habit_stack1.id}/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -173,13 +166,11 @@ class HabitStackingLogListViewTests(APITestCase):
             user=self.user1,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
         self.habit_stack2 = HabitStacking.objects.create(
             user=self.user2,
             predefined_habit1=self.habit1,
             custom_habit2='Custom Habit 2',
-            goal='NO_GOAL'
         )
     
         # Create logs for habit_stack1 for 7 days
@@ -235,7 +226,6 @@ class HabitStackingLogEditViewTests(APITestCase):
             user=self.user1,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
 
         # Create logs for habit_stack1 for 7 days
@@ -283,7 +273,6 @@ class StreakAndMilestoneTrackerTests(APITestCase):
             user=self.user,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
 
         # Create a streak and milestone tracker for the habit stack
@@ -373,13 +362,11 @@ class HabitStackingExtendAndLogTests(APITestCase):
             user=self.user1,
             predefined_habit1=self.habit1,
             predefined_habit2=self.habit2,
-            goal='DAILY'
         )
         self.habit_stack2 = HabitStacking.objects.create(
             user=self.user2,
             predefined_habit1=self.habit1,
             custom_habit2='Custom Habit 2',
-            goal='NO_GOAL'
         )
     
     def test_extend_habit_stack_success(self):

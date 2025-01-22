@@ -21,16 +21,6 @@ class HabitStacking(models.Model):
     custom_habit1 = models.CharField(max_length=255, blank=True)
     predefined_habit2 = models.ForeignKey(PredefinedHabit, null=True, blank=True, on_delete=models.SET_NULL, related_name='habit2_set')
     custom_habit2 = models.CharField(max_length=255, blank=True)
-
-    GOAL_CHOICES = [
-        ('DAILY', 'Daily'),
-        ('NO_GOAL', 'No Goal'),
-    ]
-    goal = models.CharField(
-        max_length=20,
-        choices=GOAL_CHOICES,
-        default='DAILY'
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     active_until = models.DateField(default=timezone.now)
 
@@ -44,7 +34,6 @@ class HabitStacking(models.Model):
         """
         old_active_until = self.active_until
         self.active_until = timezone.now().date() + timedelta(days=days)
-        self.goal = 'DAILY'
         self.save()
 
         # Calculate new dates

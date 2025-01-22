@@ -11,11 +11,12 @@
 |POST `/habit-stacking/`| Users can select predefined habits while creating their habit stacks. | Successful creation of a habit stack with predefined habits. |<img src="documentation/use_predefined_habit.png"> |
 |POST `/habit-stacking/`| Users can have the option to enter custom habits manually. | Successful creation of a habit stack with custom habits. |<img src="documentation/use_custom_habit.png">|
 |POST `/habit-stacking/`| If the habit stack already exists for the user with the same details, return a 400 Bad Request with a duplicate error message. | Return 400 Bad Request with error message. |<img src="documentation/duplicate_error.png">|
-|POST `/habit-stacking/`| The goal can be set to "DAILY" or "NO_GOAL," with "DAILY" being the default if no goal is specified.| Goal defaults to "DAILY" if not provided.|Goal defaults to "DAILY" if not provided.|
 |POST `/habit-stacking/`| Attempt to create a habit stack with both predefined and custom values for a single habit raises an error. | Return 400 Bad Request with validation error message. |<img src="documentation/single_habit_error.png">|
-|POST `/habit-stacking/`|Create habit stacks with a "DAILY" goal and see logs created automatically.| 7 logs for the next 7 days are created, each with `completed=False` by default.|<img src="documentation/create_stack_and_logs.png"><img src="documentation/automated_logs_list.png">|
+|POST `/habit-stacking/`|Create habit stacks and see logs created automatically.| 7 logs for the next 7 days are created, each with `completed=False` by default.|<img src="documentation/create_stack_and_logs.png"><img src="documentation/automated_logs_list.png">|
 |GET `/habit-stacking/`| The authenticated user can view a list of all their habit stacks. | Return 200 OK with a list of habit stacks for the logged-in user. |<img src="documentation/view_habitstack_list.png">|
-|GET `/habit-stacking/`| Habit stacks list includes habit1, habit2, and goal. | Return 200 OK with correct habit details for each stack. |Return 200 OK with correct habit details for each stack.| PASS |
+|GET `/habit-stacking/`| Habit stacks list includes habit1, habit2. | Return 200 OK with correct habit details for each stack. |Return 200 OK with correct habit details for each stack.| PASS |
+|POST `/habit-stacking/`|Create a habit stack and mark daily logs as complete for 3 consecutive days.|Streak count should increase to 3.||
+|POST `/habit-stacking/`|Create a habit stack and complete logs to reach a milestone for 5 completions.|A milestone should be automatically created.|
 |GET `/habit-stacking/{id}/`| The user can retrieve details of their specific habit stack. | Return 200 OK with habit stack details. |<img src="documentation/view_habitstack_detail.png">|
 |GET `/habit-stacking/{id}/`| Return 404 Not Found if the habit stack doesn’t exist.| Return 404 Not Found.|<img src="documentation/habitstack_detail_not_found.png">|
 |PUT `/habit-stacking/{id}/`| The user can update details of their existing habit stacks. | Return 200 OK with updated habit stack details. |<img src="documentation/update_habitstack.png">|
@@ -23,6 +24,8 @@
 |GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|PASS|
 | PATCH `habit-stacking-logs/<int:pk>/`|Update the completed status of a habit stacking log (mark as complete or undo).|Return 200 OK with the updated log reflecting the completed status.|<img src="documentation/update_complete.png"><img src="documentation/Update_complete_undo.png">|
 | PATCH `habit-stacking-logs/<int:pk>/`| Attempt to mark a habit stack complete in future time raises an error.| Returns a 400 Bad Request and a validation message.| <img src="documentation/error_future_date.png">|
+|PATCH `/habit-stacking-logs/<int:pk>/`|Mark one day's log as incomplete during an active streak.|Streak should reset to 0.|
+|PATCH `habit-stacking-logs/<int:pk>/`|Complete a log for today when no active streak exists.|Streak count starts at 1.|
 |PUT `/habit-stacking/<int:pk>/extend/`|Extend the active period of a habit stack by 14 days.|Returns 200 OK with the `active_until` field updated to 14 days from today.| PASS <img src="documentation/test_extend_14.png">|
 | PUT `/habit-stacking/<int:pk>/extend/`| Attempt to extend with invalid data - less than 7 days|Returns 400 Bad Request with validation error message.|<img src="documentation/test_less_than7.png">|
 |GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
@@ -60,7 +63,7 @@ GET `/feed/`|Ensure the feed includes milestones shared by the logged-in user an
 | ---- | --------------- | ------- |
 | `test_habit_stacking_log_list_authenticated`| Should return a list of habit stacking logs for the authenticated user. |PASS|
 | `test_habit_stacking_log_list_unauthenticated`|Should return `403 Forbidden` when an unauthenticated user tries to access the habit stacking logs.|PASS|
-|`test_habit_stacking_log_auto_creation_7_days`|Should automatically create 7 habit stacking logs for the authenticated user, one for each of the next 7 days, when a habit stack is created with a DAILY goal.|PASS|
+|`test_habit_stacking_log_auto_creation_7_days`|Should automatically create 7 habit stacking logs for the authenticated user, one for each of the next 7 days, when a habit stack is created.|PASS|
 
 ### HabitStackingLogEditViewTests
 | Test | Expected Result | Outcome |
