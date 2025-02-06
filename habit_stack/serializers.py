@@ -2,11 +2,11 @@ from rest_framework import serializers
 from .models import (
     HabitStacking, 
     PredefinedHabit, 
-    HabitStackingLog, 
-    StreakAndMilestoneTracker, 
-    MilestonePost
+    HabitStackingLog,
+    Milestone
     ) 
-from datetime import date
+from datetime import date, timedelta
+
 
 class HabitStackingSerializer(serializers.ModelSerializer):
     """
@@ -89,33 +89,54 @@ class HabitStackingSerializer(serializers.ModelSerializer):
 class HabitStackingLogSerializer(serializers.ModelSerializer):
     """
     Serializer for the HabitStackingLog model.
-    Provides additional fields for streak and milestone messages.
     """
     user = serializers.ReadOnlyField(source='user.username')
     habit_stack = HabitStackingSerializer()
-    streak_message = serializers.SerializerMethodField()
-    milestone_message = serializers.SerializerMethodField()
 
     class Meta:
         model = HabitStackingLog
-        fields = ['id', 'habit_stack', 'user', 'date', 'completed', 'streak_message', 'milestone_message']
+        fields = ['id', 'habit_stack', 'user', 'date', 'completed']
 
     def get_streak_message(self, obj):
         """
         Returns a message if the user is on a streak of at least 2 days.
+        Streak is calculated based on consecutive `HabitStackingLog` entries.
         """
-        tracker = StreakAndMilestoneTracker.objects.filter(user=obj.user, habit_stack=obj.habit_stack).first()
-        if tracker and tracker.current_streak >= 2:
-            return f"You're on a {tracker.current_streak}-day streak! Keep it up!"
+        user_logs = HabitStackingLog.objects.filter(
+            user=obj.user,
+            habit_stack=obj.habit_stack,
+            completed=True
+        ).order_by('-date')
+
+        streak_count = 0
+        today = date.today()
+
+        for log in user_logs:
+            if log.date == today or log.date == today - timedelta(days=streak_count):
+                streak_count += 1
+                today = log.date
+            else:
+                break
+
+        if streak_count >= 2:
+            return f"You're on a {streak_count}-day streak! Keep it up!"
         return None
+
 
     def get_milestone_message(self, obj):
         """
-        Returns a milestone message if today is a milestone day.
+        Returns a milestone message if the user has hit a milestone.
+        Milestone logic is based on completed log count.
         """
-        tracker = StreakAndMilestoneTracker.objects.filter(user=obj.user, habit_stack=obj.habit_stack).first()
-        if tracker and str(obj.date) in tracker.milestone_dates:
-            return f"Milestone achieved on this date: {obj.date}!"
+        completed_count = HabitStackingLog.objects.filter(
+            user=obj.user,
+            habit_stack=obj.habit_stack,
+            completed=True
+        ).count()
+
+        milestones = [5, 10, 20, 50, 100]
+        if completed_count in milestones:
+            return f"Milestone achieved: {completed_count} completions!"
         return None
 
 class HabitStackingLogEditSerializer(serializers.ModelSerializer):
@@ -150,17 +171,6 @@ class HabitExtendSerializer(serializers.ModelSerializer):
         Update the habit stack to extend its active period.
         """
         extension_days = validated_data.pop('extension_days', 7)
-        instance.extend_habit(extension_days)
+        instance.active_until += timedelta(days=extension_days)
+        instance.save()
         return instance
-
-
-class MilestonePostSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the MilestonePost model. Represents
-    milestone feed entries.
-    """
-
-    class Meta:
-        model = MilestonePost
-        fields = ['id', 'user', 'habit_stack', 'message', 'created_at', 'shared_on_feed']
-        read_only_fields = ['id', 'message']

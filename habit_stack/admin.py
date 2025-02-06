@@ -2,12 +2,10 @@ from django.contrib import admin
 from .models import(
     HabitStacking, 
     PredefinedHabit, 
-    HabitStackingLog, 
-    StreakAndMilestoneTracker, 
-    MilestonePost) 
+    HabitStackingLog,  
+    Milestone) 
 
 admin.site.register(HabitStacking)
 admin.site.register(PredefinedHabit)
 admin.site.register(HabitStackingLog)
-admin.site.register(StreakAndMilestoneTracker)
-admin.site.register(MilestonePost)
+admin.site.register(Milestone)

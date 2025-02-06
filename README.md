@@ -33,14 +33,13 @@ The `HabitStacking` model allows users to create custom habit stacks by choosing
 - `custom_habit1`: A CharField that allows the user to define a custom habit for the first habit stack position. This field is optional and can be left blank.
 - `predefined_habit2`: A ForeignKey linking to the PredefinedHabit model, allowing the user to select the second predefined habit for the habit stack. This field is optional and can be left blank.
 - `custom_habit2`: A CharField that allows the user to define a custom habit for the second habit stack position. This field is optional and can be left blank.
-- `goal:` A CharField that represents the goal associated with the habit stack. It can either be set to 'DAILY' (the default value) or 'NO_GOAL'.
 - `created_at`: A DateTimeField that automatically records when the habit stack is created.
 - `active_until`: A DateField that defines the duration until which the habit stack is considered active. This field is used for extending habit stacks. Defaults to 7 days from the creation date.
 
 *Methods:*
 
 - `extend_habit(days)`
-Extends the active period of the habit stack by the specified number of days. This also sets the goal back to 'DAILY'.
+Extends the active period of the habit stack by the specified number of days.
 
 *Note:*
 
@@ -57,38 +56,16 @@ The `HabitStackingLog` model tracks the progress of a user's habit stack on a da
 - `date`: A DateField that records the date for the log entry, which corresponds to the specific day the habit stacking progress is being tracked.
 - `completed`: A BooleanField that indicates whether the user has completed the habit stack for the given day. The default value is False.
 
-### StreakAndMilestoneTracker Model
+### Milestone Model
 
-The `StreakAndMilestoneTracker` model tracks a user's progress and achievements for a specific habit stack. It records streaks, milestones, and completions to provide feedback for habit formation.
-
-*Fields:*
-
-- `user`: A ForeignKey linking to the `User` model, associating the tracker with a specific user.
-- `habit_stack`: A ForeignKey linking to the `HabitStacking` model, specifying the habit stack being tracked.
-- `current_streak`: An IntegerField that keeps track of the user's ongoing streak of consecutive completions. Defaults to 0.
-- `longest_streak`: An IntegerField that records the user's highest streak achieved. Defaults to 0.
-- `total_completions`: An IntegerField storing the total number of times the user has completed the habit stack. Defaults to 0.
-- `milestone_dates`: A JSONField storing the dates on which significant milestones were achieved. Defaults to an empty list.
-
-*Methods:*
-
-- `update_streak_and_completions(self, completed_today)`
-Updates the current streak, total completions, and longest streak when a habit is marked as completed. If the streak breaks, it resets to 0. Also checks for milestones and appends them to `milestone_dates`. Returns a milestone message if applicable.
-
-- `check_milestone(self)`
-Compares the total completions against predefined milestone thresholds. If a milestone is achieved, appends the current date to `milestone_dates` and generates a message.
-
-### MilestonePost Model
-
-The `MilestonePost` model represents a milestone achieved by a user for a specific habit stack. It allows users to share their achievements as posts.
+The `Milestone` model tracks significant achievements for a habit stack. Milestones provide motivation and feedback as users progress in completing their habits.
 
 *Fields:*
 
-- `user`: A ForeignKey linking to the User model, associating the post with a specific user.
-- `habit_stack`: A ForeignKey linking to the HabitStacking model, specifying the related habit stack.
-- `message`: A TextField containing the milestone message.
-- `created_at`: A DateTimeField that automatically records when the milestone post was created.
-- `shared_on_feed`: A BooleanField indicating whether the post has been shared on the feed. Defaults to False.
+- `habit_stack`: ForeignKey linking to the `HabitStacking` model.
+- `date_achieved`: A DateField recording when the milestone was achieved.
+- `description`: A CharField describing the milestone
+
 
 # API Endpoints
 
@@ -106,10 +83,11 @@ The `MilestonePost` model represents a milestone achieved by a user for a specif
 || Update a habit stack for the authenticated user. | PUT | Update |
 || Delete a habit stack for the authenticated user. | DELETE | Delete |
 | `/habit-stacking/<int:pk>/extend/` | Extend the duration of a specific habit stack by a specified number of days.| POST | Create | 
+| `/habit-stacking/<int:pk>/progress/`| Retrieve progress details for a habit stack. | GET| Read|
 |`/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
 | `habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
-|`/milestone-posts/<int:pk>/share/`|Share a specific milestone post on the user's feed.|POST|Update|
-|`/feed/`|Retrieve a feed of shared milestone posts from all users.|GET|Read|
+
+
 # Testing
 
 See [testing.md](testing.md) for all the tests conducted.
@@ -138,3 +116,16 @@ The `check_and_deactivate` function in the HabitStacking model is designed to au
 
 *Decision:*
 The habit stack can remain set to `'DAILY'`, and users can manually extend it when desired. Logs will still be generated from the date the user clicks the extend button, ensuring no loss of functionality. The `check_and_deactivate` function has been removed from the model, if needed, a cron job can be added to periodically call this function and automatically deactivate outdated habit stacks. For now, this enhancement is deferred to keep the system simpler and maintainable.
+
+5.
+The `goal` field and related functionality caused excessive complexity during development. The added logic for goals complicated the codebase and led to frequent issues with synchronization across models, particularly for goal tracking and habit stack management.
+
+*Decision:*
+The `goal` field and its functionality were removed from the project to simplify development and focus on core features. Milestones and habit stack logs now handle progress tracking in a straightforward way. The goal feature can be reintroduced in future iterations if needed.
+
+6.
+The `StreakAndMilestoneTracker` model was removed due to redundancy and overcomplication.
+
+*Fix:*
+The `StreakAndMilestoneTracker` model was replaced with the `Milestone` model, which focuses solely on tracking milestones. Streak-related calculations were moved to the views, ensuring better separation of concerns. The functions for calculating streaks, milestones, and progress tracking are now managed in the views and serializers, providing cleaner and more maintainable code.
+

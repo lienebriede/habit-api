@@ -1,15 +1,44 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import HabitStacking, HabitStackingLog, StreakAndMilestoneTracker, MilestonePost
+from .models import HabitStacking, HabitStackingLog, Milestone
 from .serializers import (
     HabitStackingSerializer, 
     HabitStackingLogSerializer,
     HabitStackingLogEditSerializer,
-    HabitExtendSerializer,
-    MilestonePostSerializer) 
+    HabitExtendSerializer) 
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
+
+
+def calculate_streak(user, habit_stack):
+    """
+    Calculates the current streak for a specific habit stack.
+    A streak consists of consecutive completed days without gaps.
+    """
+    logs = HabitStackingLog.objects.filter(
+        user=user, 
+        habit_stack=habit_stack, 
+        completed=True
+    ).order_by('-date')
+
+    if not logs.exists():
+        return 0
+
+    current_streak = 1
+    prev_date = logs[0].date
+
+    for log in logs[1:]:
+        if (prev_date - log.date).days == 1:
+            current_streak += 1
+        else:
+            break
+
+        prev_date = log.date
+
+    return current_streak
+
 
 class HabitStackingListView(generics.ListCreateAPIView):
     """
@@ -76,7 +105,6 @@ class HabitStackingLogListView(generics.ListAPIView):
 class HabitStackingLogEditView(generics.UpdateAPIView):
     """
     Handles updating a specific habit log, marking it as completed.
-    Updates streaks and milestones for the associated habit stack.
     """
     serializer_class = HabitStackingLogEditSerializer
     permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
@@ -88,34 +116,42 @@ class HabitStackingLogEditView(generics.UpdateAPIView):
         return HabitStackingLog.objects.filter(user=self.request.user)
 
     def perform_update(self, serializer):
-        """
-        Update the streak and milestone tracker when a log is marked as completed.
-        """
         log = serializer.save()
         milestone_message = None
         streak_message = None
 
         if log.completed:
-            tracker, created = StreakAndMilestoneTracker.objects.get_or_create(
-                user=self.request.user,
-                habit_stack=log.habit_stack
-            )
+            # Recalculate streaks dynamically
+            current_streak = calculate_streak(log.user, log.habit_stack)
 
-            milestone_message = tracker.update_streak_and_completions(completed_today=True)
+            if current_streak >= 2:
+                streak_message = f"You're on a {current_streak}-day streak! Keep it up!"
 
-            if tracker.current_streak >= 2:
-                streak_message = f"You're on a {tracker.current_streak}-day streak! Keep it up!"
+            # Calculate total completions and check for milestones
+            total_completions = HabitStackingLog.objects.filter(
+                habit_stack=log.habit_stack,
+                user=log.user,
+                completed=True
+            ).count()
+
+            if total_completions % 5 == 0:
+                milestone = Milestone.objects.create(
+                    habit_stack=log.habit_stack,
+                    date_achieved=log.date,
+                    description=f"Milestone achieved: {total_completions} completions!"
+                )
+                milestone_message = milestone.description
+
+            log.streak_message = streak_message
+            log.save()
 
         self.milestone_message = milestone_message
         self.streak_message = streak_message
 
     def update(self, request, *args, **kwargs):
-        """
-        Add streak and milestone messages to the response.
-        """
         response = super().update(request, *args, **kwargs)
-        response.data['streak_message'] = getattr(self, 'streak_message', None)
         response.data['milestone_message'] = getattr(self, 'milestone_message', None)
+        response.data['streak_message'] = getattr(self, 'streak_message', None)
         return response
 
 class HabitExtendView(generics.UpdateAPIView):
@@ -159,39 +195,49 @@ class HabitExtendView(generics.UpdateAPIView):
             # Return an error response if something goes wrong
             return Response({"success": False, "error": str(e)}, status=400)
 
-class FeedView(generics.ListAPIView):
+
+class HabitProgressView(generics.RetrieveAPIView):
     """
-    API view to list all milestone posts in the feed.
+    Displays progress for each habit stack, including current streak and milestones.
     """
-    queryset = MilestonePost.objects.filter(shared_on_feed=True).order_by('-created_at')
-    serializer_class = MilestonePostSerializer
+    serializer_class = HabitStackingSerializer
     permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
 
-class ShareMilestonePostView(generics.UpdateAPIView):
-    """
-    Endpoint for sharing milestone posts to the feed.
-    """
-    queryset = MilestonePost.objects.all()
-    serializer_class = MilestonePostSerializer
-    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
+    def get_queryset(self):
+        """
+        Ensure the view only retrieves habit stacks belonging to the logged-in user.
+        """
+        return HabitStacking.objects.filter(user=self.request.user)
 
-    def update(self, request, *args, **kwargs):
+    def get_object(self):
         """
-        Handle the user's confirmation to share a milestone post.
+        Retrieves a single habit stack belonging to the logged-in user.
         """
-        milestone_post = self.get_object()
-        if milestone_post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to share this milestone post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        milestone_post.shared_on_feed = True
-        milestone_post.save()
-        return Response(
-            {
-                "success": True,
-                "message": "Milestone post shared successfully.",
-                "id": milestone_post.id,
-            },
-            status=status.HTTP_200_OK,
-        )
+        habit_stack_id = self.kwargs.get('pk')
+        return get_object_or_404(HabitStacking, user=self.request.user, id=habit_stack_id)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Override the retrieve method to calculate streak details dynamically.
+        """
+        habit_stack = self.get_object()
+
+        # Calculate streak
+        current_streak = calculate_streak(request.user, habit_stack)
+
+        # Calculate total completions and milestones
+        logs = HabitStackingLog.objects.filter(
+            habit_stack=habit_stack,
+            user=request.user
+        ).order_by('-date')
+
+        milestones = Milestone.objects.filter(habit_stack=habit_stack).values('date_achieved', 'description')
+
+        progress_data = {
+            "habit_stack": HabitStackingSerializer(habit_stack).data,
+            "current_streak": current_streak,
+            "total_completions": logs.filter(completed=True).count(),
+            "milestones": list(milestones),
+        }
+
+        return Response(progress_data, status=status.HTTP_200_OK)
