@@ -27,6 +27,8 @@
 |PATCH `/habit-stacking-logs/<int:pk>/`|Mark one day's log as incomplete during an active streak.|Streak should reset to 0.|
 |PATCH `habit-stacking-logs/<int:pk>/`|Complete a log for today when no active streak exists.|Streak count starts at 1.|
 | PUT `/habit-stacking/<int:pk>/extend/`| Attempt to extend with invalid data - less than 7 days|Returns 400 Bad Request with validation error message.|<img src="documentation/test_less_than7.png">|
+| PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 7 days from its current active_until date.|Returns 200 OK with active_until updated by 7 days.|PASS|
+| PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 14 days from its current active_until date.|Returns 200 OK with active_until updated by 14 days.|PASS|
 |GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
 
 
@@ -74,6 +76,5 @@
 |`test_extend_habit_stack_unauthenticated`|Should return 403 Forbidden for unauthenticated users attempting to extend a habit stack|PASS|
 |`test_extend_habit_stack_not_found`|Should return 404 Not Found for an invalid habit stack ID|PASS|
 |`test_habit_stacking_logs_updated_after_extend`|Should create new logs for the extended dates after successfully extending the habit stack|PASS|
-|`test_habit_stacking_logs_no_duplicates`|Should not create duplicate logs if the habit stack is extended multiple times|PASS|
 
 

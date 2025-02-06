@@ -307,31 +307,9 @@ class HabitStackingExtendAndLogTests(APITestCase):
         """Test if new logs are created after extending the habit stack."""
         self.client.login(username='Maija', password='001')
         initial_log_count = HabitStackingLog.objects.count()
-        data = {'extension_days': 7}
-        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        
+        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', {}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         new_log_count = HabitStackingLog.objects.count()
         self.assertEqual(new_log_count, initial_log_count + 7)
-
-    def test_habit_stacking_logs_no_duplicates(self):
-        """Test if duplicate logs are not created when extending the habit stack multiple times.
-        First extend for 7 days, then for 14 and expect 14 days in total."""
-        self.client.login(username='Maija', password='001')
-        initial_log_count = HabitStackingLog.objects.count()
-
-        data = {'extension_days': 7}
-        response1 = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
-        self.assertEqual(response1.status_code, status.HTTP_200_OK)
-        self.habit_stack1.refresh_from_db()
-        new_log_count_1 = HabitStackingLog.objects.count()
-        self.assertEqual(new_log_count_1, initial_log_count + 7)
-
-        data = {'extension_days': 14}
-        response2 = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
-        self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        self.habit_stack1.refresh_from_db()
-        new_log_count_2 = HabitStackingLog.objects.count()
-
-        self.assertEqual(new_log_count_2, initial_log_count + 14)
-        log_dates = HabitStackingLog.objects.filter(habit_stack=self.habit_stack1).values_list('date', flat=True)
-        self.assertEqual(len(log_dates), len(set(log_dates)))

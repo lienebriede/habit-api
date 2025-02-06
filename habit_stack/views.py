@@ -174,25 +174,43 @@ class HabitExtendView(generics.UpdateAPIView):
         """
         habit_stack = self.get_object()
 
-        # Get the extension days from the request data (default to 7 days)
-        extension_days = request.data.get('extension_days', 7)
+        # Default extension to 7 days, but allow 14 days if specified
+        extension_days = int(request.data.get('extension_days', 7))
+        if extension_days not in [7, 14]:
+            return Response({"success": False, "error": "Invalid extension period"}, status=400)
 
         try:
-            # Extend the habit stack using the updated method
-            habit_stack.extend_habit(int(extension_days))
+            # Get the last log date (or default to today)
+            last_log = HabitStackingLog.objects.filter(habit_stack=habit_stack).order_by('-date').first()
+            new_start_date = last_log.date if last_log else timezone.now().date()
+
+            # Calculate new active_until
+            new_active_until = new_start_date + timedelta(days=extension_days)
+
+            # Extend and create logs only for missing dates
+            habit_stack.active_until = new_active_until
             habit_stack.save()
 
-            # Create the response with updated data
-            response_data = {
+            new_logs = []
+            for i in range(extension_days):
+                log_date = new_start_date + timedelta(days=i + 1)
+
+                # Check if the log already exists
+                if not HabitStackingLog.objects.filter(habit_stack=habit_stack, date=log_date).exists():
+                    new_logs.append(HabitStackingLog(
+                        habit_stack=habit_stack, user=habit_stack.user, date=log_date, completed=False
+                    ))
+
+            HabitStackingLog.objects.bulk_create(new_logs)
+
+            return Response({
                 "success": True,
-                "message": f"Habit successfully extended by {extension_days} days.",
+                "message": f"Habit extended by {extension_days} days.",
                 "id": habit_stack.id,
                 "active_until": habit_stack.active_until,
-            }
-            return Response(response_data, status=200)
+            }, status=200)
 
         except Exception as e:
-            # Return an error response if something goes wrong
             return Response({"success": False, "error": str(e)}, status=400)
 
 
