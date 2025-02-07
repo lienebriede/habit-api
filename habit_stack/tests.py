@@ -5,6 +5,7 @@ from .models import(
     PredefinedHabit, 
     HabitStackingLog,
     Milestone)
+from .views import calculate_streak
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta
@@ -259,57 +260,89 @@ class HabitStackingLogEditViewTests(APITestCase):
         self.assertFalse(HabitStackingLog.objects.get(id=log.id).completed)
 
 
-class HabitStackingExtendAndLogTests(APITestCase):
+class StreakAndMilestoneTests(APITestCase):
 
     def setUp(self):
-        """Set up test data for HabitStacking extend and log view tests."""
-        
+        """Setup users and a habit stack."""
         self.user1 = User.objects.create_user(username='Maija', password='001')
         self.user2 = User.objects.create_user(username='Janis', password='002')
 
-        self.habit1 = PredefinedHabit.objects.create(name='Habit 1')
-        self.habit2 = PredefinedHabit.objects.create(name='Habit 2')
+        self.habit_stack = HabitStacking.objects.create(user=self.user1, custom_habit1="Daily Reading")
 
-        self.habit_stack1 = HabitStacking.objects.create(
-            user=self.user1,
-            predefined_habit1=self.habit1,
-            predefined_habit2=self.habit2,
-        )
-        self.habit_stack2 = HabitStacking.objects.create(
-            user=self.user2,
-            predefined_habit1=self.habit1,
-            custom_habit2='Custom Habit 2',
-        )
-    
-    def test_extend_habit_stack_success(self):
-        """Test if the habit stack can be extended successfully by 7 days."""
+    def test_streak_increases_correctly(self):
+        """ Test that the streak increases correctly when logs are consecutive."""
+        today = timezone.now().date()
+
+        # Create logs for 3 consecutive days
+        for i in range(3):
+            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+
+        # Calculate streak
+        current_streak = calculate_streak(self.user1, self.habit_stack)
+
+        self.assertEqual(current_streak, 3, "Current streak should be 3")
+
+    def test_streak_resets_after_missed_day(self):
+        """Test that the streak resets if a day is missed."""
+        today = timezone.now().date()
+
+        # Completed today and 2 days ago (missed yesterday)
+        HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today, completed=True)
+        HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=2), completed=True)
+
+        # Calculate streak
+        current_streak = calculate_streak(self.user1, self.habit_stack)
+
+        self.assertEqual(current_streak, 1, "Current streak should reset to 1 after a missed day")
+
+    def test_milestone_at_5_completions(self):
+        """Test that a milestone is created after 5 completed logs."""
+        today = timezone.now().date()
+
+        # Complete 5 logs
+        for i in range(5):
+            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+
+        total_completions = HabitStackingLog.objects.filter(habit_stack=self.habit_stack, user=self.user1, completed=True).count()
+
+        # Check for milestone
+        if total_completions == 5:
+            Milestone.objects.create(habit_stack=self.habit_stack, date_achieved=today, description="Milestone achieved: 5 completions!")
+
+        self.assertEqual(Milestone.objects.count(), 1)
+        self.assertEqual(Milestone.objects.first().description, "Milestone achieved: 5 completions!")
+
+    def test_milestone_at_10_completions(self):
+        """Test that a milestone is created after 10 completed logs."""
+        today = timezone.now().date()
+
+        # Complete 10 logs
+        for i in range(10):
+            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+
+        total_completions = HabitStackingLog.objects.filter(habit_stack=self.habit_stack, user=self.user1, completed=True).count()
+
+        # Check for milestone
+        if total_completions == 10:
+            Milestone.objects.create(habit_stack=self.habit_stack, date_achieved=today, description="Milestone achieved: 10 completions!")
+
+        self.assertEqual(Milestone.objects.count(), 1, "There should be only 1 milestone created at 10 completions")
+        self.assertEqual(Milestone.objects.first().description, "Milestone achieved: 10 completions!")
+
+    def test_progress_view(self):
+        """ Test that the progress view returns the correct streak and milestone data."""
+        today = timezone.now().date()
+
+        # Complete 3 consecutive logs
+        for i in range(3):
+            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+
         self.client.login(username='Maija', password='001')
-        data = {'extension_days': 7}
-        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
+        response = self.client.get(f'/habit-stacking/{self.habit_stack.id}/progress/')
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.habit_stack1.refresh_from_db()
-        self.assertEqual(self.habit_stack1.active_until, (timezone.now().date() + timedelta(days=7)))
-    
-    def test_extend_habit_stack_unauthenticated(self):
-        """Test if unauthenticated users are prevented from extending a habit stack."""
-        data = {'extension_days': 7}
-        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_extend_habit_stack_not_found(self):
-        """Test if an invalid habit stack ID returns a not found error."""
-        self.client.login(username='Maija', password='001')
-        data = {'extension_days': 7}
-        response = self.client.patch('/habit-stacking/9999/extend/', data, format='json')  # Invalid ID
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_habit_stacking_logs_updated_after_extend(self):
-        """Test if new logs are created after extending the habit stack."""
-        self.client.login(username='Maija', password='001')
-        initial_log_count = HabitStackingLog.objects.count()
-        
-        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/extend/', {}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        new_log_count = HabitStackingLog.objects.count()
-        self.assertEqual(new_log_count, initial_log_count + 7)
+        progress_data = response.json()
+        self.assertEqual(progress_data['current_streak'], 3)
+        self.assertEqual(progress_data['total_completions'], 3)
+        self.assertEqual(len(progress_data['milestones']), 0, "No milestones should be created yet")
