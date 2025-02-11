@@ -20,17 +20,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^3ua2kfobul(fce64rjk-e)b@s*3sm(0!0)d&q*ou8*f-pv+v%'
+SECRET_KEY = (
+    'django-insecure-^3ua2kfobul(fce64rjk-e)b@s*3sm(0!0)d&q*ou8*f-pv+v%'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://8000-lienebriede-habitapi-sf6o0y7v3iq.ws.codeinstitute-ide.net'
+    'https://localhost'
 ]
 
 ALLOWED_HOSTS = [
-    '8000-lienebriede-habitapi-sf6o0y7v3iq.ws.codeinstitute-ide.net',
+    '127.0.0.1',
 ]
 
 
@@ -96,16 +98,28 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'UserAttributeSimilarityValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'MinimumLengthValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'CommonPasswordValidator'
+        ),
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': (
+            'django.contrib.auth.password_validation.'
+            'NumericPasswordValidator'
+        ),
     },
 ]
 
