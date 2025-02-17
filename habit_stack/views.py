@@ -3,10 +3,10 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from .models import HabitStacking, HabitStackingLog, Milestone
 from .serializers import (
-    HabitStackingSerializer, 
+    HabitStackingSerializer,
     HabitStackingLogSerializer,
     HabitStackingLogEditSerializer,
-    HabitExtendSerializer) 
+    HabitExtendSerializer)
 from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
@@ -18,8 +18,8 @@ def calculate_streak(user, habit_stack):
     A streak consists of consecutive completed days without gaps.
     """
     logs = HabitStackingLog.objects.filter(
-        user=user, 
-        habit_stack=habit_stack, 
+        user=user,
+        habit_stack=habit_stack,
         completed=True
     ).order_by('-date')
 
@@ -42,7 +42,8 @@ def calculate_streak(user, habit_stack):
 
 class HabitStackingListView(generics.ListCreateAPIView):
     """
-    Handles listing all habit stacks for the logged-in user and creating new ones.
+    Handles listing all habit stacks for the logged-in user
+    and creating new ones.
     """
     serializer_class = HabitStackingSerializer
     permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
@@ -55,8 +56,8 @@ class HabitStackingListView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         """
-        Creates a new habit stack for the logged-in user and automatically creates
-        logs for the next 7 days.
+        Creates a new habit stack for the logged-in user
+        and automatically creates logs for the next 7 days.
         """
         habit_stack = serializer.save(user=self.request.user)
 
@@ -68,7 +69,8 @@ class HabitStackingListView(generics.ListCreateAPIView):
                 date=log_date,
                 completed=False
             )
-  
+
+
 class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Handles retrieving, updating, or deleting a specific habit stack.
@@ -78,7 +80,8 @@ class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         """
-        Ensures only habit stacks belonging to the logged-in user are accessible.
+        Ensures only habit stacks belonging to the
+        logged-in user are accessible.
         """
         return HabitStacking.objects.all()
 
@@ -88,6 +91,7 @@ class HabitStackingDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         instance = self.get_object()
         serializer.save(user=self.request.user)
+
 
 class HabitStackingLogListView(generics.ListAPIView):
     """
@@ -100,7 +104,10 @@ class HabitStackingLogListView(generics.ListAPIView):
         """
         Retrieves habit logs belonging to the logged-in user.
         """
-        return HabitStackingLog.objects.filter(user=self.request.user).order_by('date')
+        return HabitStackingLog.objects.filter(
+            user=self.request.user
+            ).order_by('date')
+
 
 class HabitStackingLogEditView(generics.UpdateAPIView):
     """

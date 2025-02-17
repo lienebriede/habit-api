@@ -2,11 +2,11 @@ from django.urls import path
 from .views import (
     HabitStackingListView,
     HabitStackingDetailView,
-    HabitStackingLogListView, 
+    HabitStackingLogListView,
     HabitStackingLogEditView,
     HabitExtendView,
     HabitProgressView,
-)  
+)
 
 urlpatterns = [
     path('habit-stacking/', HabitStackingListView.as_view()),

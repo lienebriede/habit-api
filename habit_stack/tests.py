@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework.test import APITestCase
-from .models import(
+from .models import (
     HabitStacking, 
     PredefinedHabit, 
     HabitStackingLog,
@@ -60,7 +60,10 @@ class HabitStackingListViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_habit_stack_validation_error(self):
-        """Test validation error when creating a habit stack with invalid data."""
+        """
+        Test validation error when 
+        creating a habit stack with invalid data.
+        """
         self.client.login(username='Maija', password='001')
         data = {
             'predefined_habit1': self.habit1.id,
@@ -70,13 +73,17 @@ class HabitStackingListViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_habit_stack_unauthenticated(self):
-        """Test if unauthenticated users are forbidden from creating a habit stack."""
+        """
+        Test if unauthenticated users are forbidden 
+        from creating a habit stack.
+        """
         data = {
             'predefined_habit1': self.habit1.id,
             'predefined_habit2': self.habit2.id,
         }
         response = self.client.post('/habit-stacking/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class HabitStackingDetailViewTests(APITestCase):
     def setUp(self):
@@ -113,7 +120,10 @@ class HabitStackingDetailViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_habit_stacking_detail_view_forbidden(self):
-        """Test if a user is forbidden from accessing another user's habit stack."""
+        """
+        Test if a user is forbidden from accessing another
+        user's habit stack.
+        """
         self.client.login(username='Janis', password='002')
         response = self.client.get(f'/habit-stacking/{self.habit_stack1.id}/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -125,27 +135,43 @@ class HabitStackingDetailViewTests(APITestCase):
             'custom_habit1': 'Updated habit1',
             'predefined_habit2': self.habit2.id,
         }
-        response = self.client.patch(f'/habit-stacking/{self.habit_stack1.id}/', data, format='json')
+        response = self.client.patch(
+            f'/habit-stacking/{self.habit_stack1.id}/',
+            data, format='json'
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_habit_stack_forbidden(self):
-        """Test if a user is forbidden from updating another user's habit stack."""
+        """Test if a user is forbidden from updating 
+        another user's habit stack.
+        """
         self.client.login(username='Janis', password='002')
         data = {'custom_habit1': 'Updated habit1'}
-        response = self.client.put(f'/habit-stacking/{self.habit_stack1.id}/', data, format='json')
+        response = self.client.put(
+            f'/habit-stacking/{self.habit_stack1.id}/',
+            data, format='json'
+            )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_habit_stack(self):
         """Test if an authenticated user can delete their habit stack."""
         self.client.login(username='Maija', password='001')
-        response = self.client.delete(f'/habit-stacking/{self.habit_stack1.id}/')
+        response = self.client.delete(
+            f'/habit-stacking/{self.habit_stack1.id}/'
+            )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_habit_stack_forbidden(self):
-        """Test if a user is forbidden from deleting another user's habit stack."""
+        """
+        Test if a user is forbidden from deleting
+        another user's habit stack.
+        """
         self.client.login(username='Janis', password='002')
-        response = self.client.delete(f'/habit-stacking/{self.habit_stack1.id}/')
+        response = self.client.delete(
+            f'/habit-stacking/{self.habit_stack1.id}/'
+            )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class HabitStackingLogListViewTests(APITestCase):
 
@@ -177,7 +203,10 @@ class HabitStackingLogListViewTests(APITestCase):
         self._create_auto_logs(self.habit_stack1)
 
     def _create_auto_logs(self, habit_stack):
-        """Helper function to create 7 habit stacking logs for the given habit stack."""
+        """
+        Helper function to create 7 habit stacking logs
+        for the given habit stack.
+        """
         for i in range(7):
             HabitStackingLog.objects.create(
                 habit_stack=habit_stack,
@@ -185,8 +214,12 @@ class HabitStackingLogListViewTests(APITestCase):
                 date=(timezone.now().date() + timedelta(days=i)),
                 completed=False
             )
+
     def test_habit_stacking_log_list_authenticated(self):
-        """Test if an authenticated user can view their own habit stacking logs."""
+        """
+        Test if an authenticated user can view
+        their own habit stacking logs.
+        """
         self.client.login(username='Maija', password='001')
         response = self.client.get('/habit-stacking-logs/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -206,7 +239,9 @@ class HabitStackingLogListViewTests(APITestCase):
         
         # Test the logs are created for the next 7 days, 'completed' is False
         for i, log in enumerate(response.data):
-            expected_date = (timezone.now().date() + timedelta(days=i)).isoformat()
+            expected_date = (
+                timezone.now().date() + timedelta(days=i)
+                ).isoformat()
             self.assertEqual(log["date"], expected_date)
             self.assertFalse(log["completed"])
             
@@ -232,7 +267,10 @@ class HabitStackingLogEditViewTests(APITestCase):
         self._create_auto_logs(self.habit_stack1)
 
     def _create_auto_logs(self, habit_stack):
-        """Helper function to create 7 habit stacking logs for the given habit stack."""
+        """
+        Helper function to create 7 habit stacking
+        logs for the given habit stack.
+        """
         for i in range(7):
             HabitStackingLog.objects.create(
                 habit_stack=habit_stack,
@@ -245,7 +283,9 @@ class HabitStackingLogEditViewTests(APITestCase):
         """Test if a user can mark a habit stacking log as completed."""
         self.client.login(username='Maija', password='001')
         log = HabitStackingLog.objects.filter(user=self.user1).first()
-        response = self.client.patch(f'/habit-stacking-logs/{log.id}/', {'completed': True})
+        response = self.client.patch(
+            f'/habit-stacking-logs/{log.id}/', {'completed': True}
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(HabitStackingLog.objects.get(id=log.id).completed)
 
@@ -255,7 +295,9 @@ class HabitStackingLogEditViewTests(APITestCase):
         log = HabitStackingLog.objects.filter(user=self.user1).first()
         log.completed = True
         log.save()
-        response = self.client.patch(f'/habit-stacking-logs/{log.id}/', {'completed': False})
+        response = self.client.patch(
+            f'/habit-stacking-logs/{log.id}/', {'completed': False}
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(HabitStackingLog.objects.get(id=log.id).completed)
 
@@ -267,15 +309,22 @@ class StreakAndMilestoneTests(APITestCase):
         self.user1 = User.objects.create_user(username='Maija', password='001')
         self.user2 = User.objects.create_user(username='Janis', password='002')
 
-        self.habit_stack = HabitStacking.objects.create(user=self.user1, custom_habit1="Daily Reading")
+        self.habit_stack = HabitStacking.objects.create(
+            user=self.user1, custom_habit1="Daily Reading"
+            )
 
     def test_streak_increases_correctly(self):
-        """ Test that the streak increases correctly when logs are consecutive."""
+        """ Test that the streak increases correctly
+        when logs are consecutive.
+        """
         today = timezone.now().date()
 
         # Create logs for 3 consecutive days
         for i in range(3):
-            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+            HabitStackingLog.objects.create(
+                habit_stack=self.habit_stack,
+                user=self.user1, date=today - timedelta(days=i), completed=True
+                )
 
         # Calculate streak
         current_streak = calculate_streak(self.user1, self.habit_stack)
@@ -287,13 +336,23 @@ class StreakAndMilestoneTests(APITestCase):
         today = timezone.now().date()
 
         # Completed today and 2 days ago (missed yesterday)
-        HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today, completed=True)
-        HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=2), completed=True)
+        HabitStackingLog.objects.create(
+            habit_stack=self.habit_stack,
+            user=self.user1,
+            date=today, completed=True
+            )
+        HabitStackingLog.objects.create(
+            habit_stack=self.habit_stack,
+            user=self.user1, date=today - timedelta(days=2), completed=True
+            )
 
         # Calculate streak
         current_streak = calculate_streak(self.user1, self.habit_stack)
 
-        self.assertEqual(current_streak, 1, "Current streak should reset to 1 after a missed day")
+        self.assertEqual(
+            current_streak, 1,
+            "Current streak should reset to 1 after a missed day"
+            )
 
     def test_milestone_at_5_completions(self):
         """Test that a milestone is created after 5 completed logs."""
@@ -301,16 +360,29 @@ class StreakAndMilestoneTests(APITestCase):
 
         # Complete 5 logs
         for i in range(5):
-            HabitStackingLog.objects.create(habit_stack=self.habit_stack, user=self.user1, date=today - timedelta(days=i), completed=True)
+            HabitStackingLog.objects.create(
+                habit_stack=self.habit_stack,
+                user=self.user1, date=today - timedelta(days=i), completed=True
+                )
 
-        total_completions = HabitStackingLog.objects.filter(habit_stack=self.habit_stack, user=self.user1, completed=True).count()
+        total_completions = HabitStackingLog.objects.filter(
+            habit_stack=self.habit_stack,
+            user=self.user1, completed=True
+            ).count()
 
         # Check for milestone
         if total_completions == 5:
-            Milestone.objects.create(habit_stack=self.habit_stack, date_achieved=today, description="Milestone achieved: 5 completions!")
+            Milestone.objects.create(
+                habit_stack=self.habit_stack,
+                date_achieved=today,
+                description="Milestone achieved: 5 completions!"
+                )
 
         self.assertEqual(Milestone.objects.count(), 1)
-        self.assertEqual(Milestone.objects.first().description, "Milestone achieved: 5 completions!")
+        self.assertEqual(
+            Milestone.objects.first().description,
+            "Milestone achieved: 5 completions!"
+            )
 
     def test_milestone_at_10_completions(self):
         """Test that a milestone is created after 10 completed logs."""

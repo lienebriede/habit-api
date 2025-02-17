@@ -18,18 +18,17 @@
 |GET `/habit-stacking/{id}/`| Return 404 Not Found if the habit stack doesn’t exist.| Return 404 Not Found.|<img src="documentation/habitstack_detail_not_found.png">|
 |PUT `/habit-stacking/{id}/`| The user can update details of their existing habit stacks. | Return 200 OK with updated habit stack details. |<img src="documentation/update_habitstack.png">|
 |DELETE `/habit-stacking/{id}/`| The user can delete their own habit stacks. | Return 204 No Content on successful deletion. |<img src="documentation/204_no_content.png">|
-|GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|PASS|
+|GET `habit-stacking-logs`|List all habit stacking logs for the authenticated user.|Return 200 OK with a list of logs for the authenticated user, including habit_stack, date, and completed|<img src="documentation/log_list.png">|
 | PATCH `habit-stacking-logs/<int:pk>/`|Update the completed status of a habit stacking log (mark as complete or undo).|Return 200 OK with the updated log reflecting the completed status.|<img src="documentation/update_complete.png"><img src="documentation/Update_complete_undo.png">|
 | PATCH `habit-stacking-logs/<int:pk>/`| Attempt to mark a habit stack complete in future time raises an error.| Returns a 400 Bad Request and a validation message.| <img src="documentation/error_future_date.png">|
-|PATCH `habit-stacking-logs/<int:pk>/`|Complete a log for today when no active streak exists.|Streak count starts at 1.| PASS|
 |GET `/habit-stacking/<int:pk>/progress/`| Retrieves detailed progress of the habit stack, updating accurately after each completion.|Progress view reflects changes correctly.|<img src="documentation/streak_1.png">
 |PATCH `/habit-stacking-logs/<int:pk>/`|Displays a streak message starting from the second consecutive completion.| After the second completion, there is a streak message "You're on a 2-day streak! Keep it up!"| <img src="documentation/streak_message.png">
-|GET `/habit-stacking/<int:pk>/progress/`|Shows milestone achievements after 5 and 10 completions. | Completing 5 and 10 logs triggers milestone updates in the progress view.| PASS|
+|GET `/habit-stacking/<int:pk>/progress/`|Shows milestone achievements after 5 and 10 completions. | Completing 5 and 10 logs triggers milestone updates in the progress view.| <img src="documentation/milestone_10.png">|
 |PATCH `/habit-stacking-logs/<int:pk>/`|Displays a milestone message after five completions.| After five completions there is a milestone message "Milestone achieved: 5 completions!"| <img src="documentation/milestone_message.png">
 |PATCH `/habit-stacking-logs/<int:pk>/`|Restarts the streak from 1 after a reset due to missed completions. |Completing a log after a reset sets the streak back to 1.|<img src="documentation/streak_resets.png">
 | PUT `/habit-stacking/<int:pk>/extend/`| Attempt to extend with invalid data - less than 7 days|Returns 400 Bad Request with validation error message.|<img src="documentation/test_less_than7.png">|
 | PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 7 days from its current active_until date.|Returns 200 OK with active_until updated by 7 days.|<img src="documentation/extend_7days.png">|
-| PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 14 days from its current active_until date.|Returns 200 OK with active_until updated by 14 days.|PASS|
+| PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 14 days from its current active_until date.|Returns 200 OK with active_until updated by 14 days.|<img src="documentation/habit_extend_14.png">|
 |GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
 
 
