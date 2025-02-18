@@ -68,7 +68,8 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = [
     '127.0.0.1',
-    'https://habit-by-bit-django-afc312512795.herokuapp.com'
+    'habit-by-bit-django-afc312512795.herokuapp.com',
+    'localhost'
 ]
 
 
