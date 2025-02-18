@@ -5,6 +5,7 @@ from .models import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     is_owner = serializers.SerializerMethodField()
+    image = serializers.ImageField(required=False)
 
     def get_is_owner(self, obj):
         request = self.context['request']

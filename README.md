@@ -66,7 +66,6 @@ The `Milestone` model tracks significant achievements for a habit stack. Milesto
 - `date_achieved`: A DateField recording when the milestone was achieved.
 - `description`: A CharField describing the milestone
 
-
 # API Endpoints
 
 | URL | Notes | HTTP Method | CRUD Operations |

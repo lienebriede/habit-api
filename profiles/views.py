@@ -24,3 +24,7 @@ class ProfileDetail(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return Profile.objects.filter(user=self.request.user)
+
+    def patch(self, request, *args, **kwargs):
+        """ Ensure partial updates work properly """
+        return self.partial_update(request, *args, **kwargs)
