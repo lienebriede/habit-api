@@ -65,6 +65,7 @@ DEBUG = 'DEV' in os.environ
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://habit-by-bit-django-afc312512795.herokuapp.com",
 ]
 
 ALLOWED_HOSTS = [
@@ -110,15 +111,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-if 'CLIENT_ORIGIN' in os.environ:
-    CORS_ALLOWED_ORIGINS = [
-        os.environ.get('CLIENT_ORIGIN')
-    ]
-else:
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://.*\.gitpod\.io$",
-    ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://habit-by-bit-django-afc312512795.herokuapp.com",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
 
 ROOT_URLCONF = 'habit_api.urls'
 
