@@ -10,11 +10,13 @@ class ProfileList(generics.ListAPIView):
     This view should not be exposed for now as profiles are private.
     No create view as profile creation is handled by django signals.
     """
-    queryset = Profile.objects.none()
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
 
-
+    def get_queryset(self):
+        # Only return the authenticated user's profile
+        return Profile.objects.filter(user=self.request.user)
+    
 class ProfileDetail(generics.RetrieveUpdateAPIView):
     """
     Retrieve or update a profile if you're the owner.

@@ -128,3 +128,9 @@ The `StreakAndMilestoneTracker` model was removed due to redundancy and overcomp
 *Fix:*
 The `StreakAndMilestoneTracker` model was replaced with the `Milestone` model, which focuses solely on tracking milestones. Streak-related calculations were moved to the views, ensuring better separation of concerns. The functions for calculating streaks, milestones, and progress tracking are now managed in the views and serializers, providing cleaner and more maintainable code.
 
+7.
+During API testing, users were unable to access their own profiles via the `/profiles/{id}/` endpoint because the `/profiles/` list view was restricted, returning an empty result. This prevented authenticated users from retrieving or updating their own profile information.
+
+*Fix:*
+The profile list view was modified to return only the authenticated user's profile, and the frontend was updated to first fetch the user’s ID via /dj-rest-auth/user/ before making a request to `/profiles/{id}/`. This ensures that users can only access their own profiles while maintaining privacy and security.
+
