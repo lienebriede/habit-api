@@ -17,6 +17,17 @@ import dj_database_url
 if os.path.exists('env.py'):
     import env
 
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://habit-by-bit-react-e35ac67403a0.herokuapp.com",
+    "https://habit-by-bit-django-afc312512795.herokuapp.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Cloudinary storage settings
 CLOUDINARY_STORAGE = {
     'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL')
 }
@@ -25,28 +36,6 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
-    'DATETIME_FORMAT': '%d %b %Y',
-}
-
-
-REST_USE_JWT = True
-JWT_AUTH_COOKIE = 'my-app-auth'
-JWT_AUTH_REFRESH_COOKIE = 'my-refresh-token'
-JWT_AUTH_SECURE = True
-JWT_AUTH_SAMESITE = 'None'
-
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'habit_api.serializers.CurrentUserSerializer'
-}
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -57,21 +46,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = 'DEV' in os.environ
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://habit-by-bit-django-afc312512795.herokuapp.com",
-]
-
 ALLOWED_HOSTS = [
+    os.environ.get('ALLOWED_HOST', ''),
     '127.0.0.1',
-    'habit-by-bit-django-afc312512795.herokuapp.com',
-    'localhost'
+    'localhost',
+    'habit-by-bit-django-afc312512795.herokuapp.com'
 ]
-
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -94,7 +76,42 @@ INSTALLED_APPS = [
     'profiles',
     'habit_stack',
 ]
+
 SITE_ID = 1
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [( 
+        'rest_framework.authentication.SessionAuthentication' 
+        if 'DEV' in os.environ 
+        else 'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
+    )],
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DATETIME_FORMAT': '%d %b %Y',
+}
+if 'DEV' not in os.environ:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = [
+        'rest_framework.renderers.JSONRenderer',
+    ]
+
+# JWT settings
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = 'my-app-auth'
+JWT_AUTH_REFRESH_COOKIE = 'my-refresh-token'
+JWT_AUTH_SECURE = False if 'DEV' in os.environ else True
+JWT_AUTH_SAMESITE = 'None'
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'habit_api.serializers.CurrentUserSerializer'
+}
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://habit-by-bit-django-afc312512795.herokuapp.com",
+]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -106,15 +123,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://habit-by-bit-django-afc312512795.herokuapp.com",
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
 
 ROOT_URLCONF = 'habit_api.urls'
 
@@ -139,7 +147,6 @@ WSGI_APPLICATION = 'habit_api.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
 if 'DEV' in os.environ:
     DATABASES = {
         'default': {
