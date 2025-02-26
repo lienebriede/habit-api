@@ -30,7 +30,7 @@
 | PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 7 days from its current active_until date.|Returns 200 OK with active_until updated by 7 days.|<img src="documentation/extend_7days.png">|
 | PUT `/habit-stacking/<int:pk>/extend/`|Extends the active period of a habit stack by 14 days from its current active_until date.|Returns 200 OK with active_until updated by 14 days.|<img src="documentation/habit_extend_14.png">|
 |GET `/habit-stacking-logs/`|Verify that new logs are generated for the extended period and no duplicate logs are made.|The list of logs has been update and no duplicate logs are created| PASS|
-
+| GET `/predefined-habits/`| Fetches the predefined habit list.| Returns 200 OK and the list of predefined habits. |<img src="documentation/predefined_list.png">|
 
 # Automated Tests
 

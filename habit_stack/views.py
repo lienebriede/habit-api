@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
-from .models import HabitStacking, HabitStackingLog, Milestone
+from .models import PredefinedHabit, HabitStacking, HabitStackingLog, Milestone
 from .serializers import (
+    PredefinedHabitSerializer,
     HabitStackingSerializer,
     HabitStackingLogSerializer,
     HabitStackingLogEditSerializer,
@@ -11,6 +12,14 @@ from habit_api.permissions import IsAuthenticatedAndOwnerOrReadOnly
 from django.utils import timezone
 from datetime import timedelta
 
+
+class PredefinedHabitListView(generics.ListAPIView):
+    """
+    Fetches the list of predefined habits.
+    """
+    queryset = PredefinedHabit.objects.all()
+    serializer_class = PredefinedHabitSerializer
+    permission_classes = [IsAuthenticatedAndOwnerOrReadOnly]
 
 def calculate_streak(user, habit_stack):
     """

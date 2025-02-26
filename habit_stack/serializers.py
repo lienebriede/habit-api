@@ -6,6 +6,13 @@ from .models import (
     )
 from datetime import date, timedelta
 
+class PredefinedHabitSerializer(serializers.ModelSerializer):
+    """
+    Serializer for predefined habits.
+    """
+    class Meta:
+        model = PredefinedHabit
+        fields = ['name']
 
 class HabitStackingSerializer(serializers.ModelSerializer):
     """

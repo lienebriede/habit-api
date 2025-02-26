@@ -70,9 +70,9 @@ The `Milestone` model tracks significant achievements for a habit stack. Milesto
 
 | URL | Notes | HTTP Method | CRUD Operations |
 | --- | ----- | ------------| --------------- |
-| `dj-rest-auth/registration/` | Create new user | POST | Create |
-| `dj-rest-auth/login/` | Login new user | POST | Read |
-| `dj-rest-auth/logout/` | Logout new user | POST | Delete |
+| `/dj-rest-auth/registration/` | Create new user | POST | Create |
+| `/dj-rest-auth/login/` | Login new user | POST | Read |
+| `/dj-rest-auth/logout/` | Logout new user | POST | Delete |
 | `/profiles/` | List all profiles. | GET | Read |
 | `/profiles/<int:pk>/` | Retrieve a profile based on the provided profile ID. | GET | Read |
 | | Update a profile based on the provided profile ID. | PUT | Update |
@@ -84,7 +84,8 @@ The `Milestone` model tracks significant achievements for a habit stack. Milesto
 | `/habit-stacking/<int:pk>/extend/` | Extend the duration of a specific habit stack by a specified number of days.| POST | Create | 
 | `/habit-stacking/<int:pk>/progress/`| Retrieve progress details for a habit stack. | GET| Read|
 |`/habit-stacking-logs/`| List all habit stacking logs for the authenticated user. | GET|Read|
-| `habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
+| `/habit-stacking-logs/<int:pk>/`|Update the completion status of a specific habit stacking log.|PATCH|Update|
+| `/predefined-habits/`| Fetch the predefined habit list.| GET| Read|
 
 
 # Testing
@@ -133,4 +134,3 @@ During API testing, users were unable to access their own profiles via the `/pro
 
 *Fix:*
 The profile list view was modified to return only the authenticated user's profile, and the frontend was updated to first fetch the user’s ID via /dj-rest-auth/user/ before making a request to `/profiles/{id}/`. This ensures that users can only access their own profiles while maintaining privacy and security.
-
