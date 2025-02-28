@@ -12,7 +12,7 @@ class PredefinedHabitSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = PredefinedHabit
-        fields = ['name']
+        fields = ['id', 'name']
 
 class HabitStackingSerializer(serializers.ModelSerializer):
     """
