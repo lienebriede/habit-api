@@ -40,7 +40,8 @@ class HabitStackingSerializer(serializers.ModelSerializer):
             'custom_habit1',
             'predefined_habit2',
             'custom_habit2',
-            'created_at']
+            'created_at',
+            'active_until']
 
     def validate(self, data):
         """
