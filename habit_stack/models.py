@@ -37,7 +37,12 @@ class HabitStacking(models.Model):
         )
     custom_habit2 = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    active_until = models.DateField(default=timezone.now)
+
+    def default_active_until():
+        """Returns the date 7 days from now"""
+        return timezone.now().date() + timedelta(days=7)
+
+    active_until = models.DateField(default=default_active_until)
 
     class Meta:
         unique_together = (
