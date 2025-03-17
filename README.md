@@ -1,6 +1,15 @@
 <h2 align="center">Habit API</h2>
 
-## Table of Contents
+This API offers comprehensive CRUD functionality for managing habit data. Built using the Django Rest Framework, it serves as the backend solution for the Habit By Bit application, enabling seamless interaction with habit-related data.
+
+[Habit by Bit project](https://habit-by-bit-react-e35ac67403a0.herokuapp.com/)
+
+[To Frontend Repo](https://github.com/lienebriede/habit-react/)
+
+# Database schema
+
+<img src="documentation/database.png" width="600">
+
 
 # Models
 
@@ -66,6 +75,7 @@ The `Milestone` model tracks significant achievements for a habit stack. Milesto
 - `date_achieved`: A DateField recording when the milestone was achieved.
 - `description`: A CharField describing the milestone
 
+
 # API Endpoints
 
 | URL | Notes | HTTP Method | CRUD Operations |
@@ -91,6 +101,7 @@ The `Milestone` model tracks significant achievements for a habit stack. Milesto
 # Testing
 
 See [testing.md](testing.md) for all the tests conducted.
+
 
 # Bugs and Issues
 

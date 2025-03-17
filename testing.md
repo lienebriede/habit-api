@@ -1,11 +1,5 @@
 # Manual Testing
 
-## Authorisation
-
-## Profile
-
-## HabitStacking API
-
 | API Endpoint | Test Case | Expected Outcome | Actual Result |
 | ------------ | --------- | ---------------- | ------------- |
 |POST `/habit-stacking/`| Users can select predefined habits while creating their habit stacks. | Successful creation of a habit stack with predefined habits. |<img src="documentation/use_predefined_habit.png"> |
